@@ -37,6 +37,8 @@ class SimPhiChartInfoParser(InfoParser):
         for row in reader:
             data = row  # Keep the last row
 
+        data = {k: v for k, v in data.items() if not v is None}
+
         info = SimPhiChartInfo.model_validate(data)
 
         return info
