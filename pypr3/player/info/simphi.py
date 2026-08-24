@@ -7,6 +7,10 @@ from pydantic import BaseModel
 
 
 class SimPhiChartInfo(BaseModel):
+    """
+    Reference: https://docs.lchzh.net/project/sim-phi-core/resource#info-csv
+    """
+
     Chart: str | None = None
     Music: str | None = None
     Image: str | None = None
