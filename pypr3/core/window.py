@@ -2,6 +2,7 @@ from enum import IntEnum
 
 
 import pygame
+from loguru import logger
 
 
 class VSyncType(IntEnum):
@@ -47,6 +48,9 @@ class Window:
         self._set_caption()
 
         self._is_created = True
+
+        logger.info(
+            f"Window created: size={self.size}, title='{self._title}', resizable={self._resizable}, vsync={self._vsync.name}")
 
     def _on_size_changed(self):
         if self._is_created:
