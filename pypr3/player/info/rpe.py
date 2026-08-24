@@ -5,6 +5,9 @@ from io import StringIO
 from pydantic import BaseModel
 
 
+from pypr3.player.info.base import InfoParser
+
+
 class RPEChartInfo(BaseModel):
     Name: str = "Unknown"
     Path: str = "Unknown"
@@ -20,7 +23,7 @@ class RPEChartInfo(BaseModel):
     Group: str = "Unknown"
 
 
-class RPEChartInfoParser:
+class RPEChartInfoParser(InfoParser):
     @staticmethod
     def load(fp: IO[str]) -> RPEChartInfo:
         lines = fp.readlines()

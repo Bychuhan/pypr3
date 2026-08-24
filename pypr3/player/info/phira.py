@@ -8,6 +8,9 @@ import yaml
 from pydantic import BaseModel, model_validator
 
 
+from pypr3.player.info.base import InfoParser
+
+
 class ChartFormat(IntEnum):
     Rpe = 0
     Pec = auto()
@@ -54,7 +57,7 @@ class PhiraChartInfo(BaseModel):
         return self
 
 
-class PhiraChartInfoParser:
+class PhiraChartInfoParser(InfoParser):
     @staticmethod
     def load(fp: IO[str]) -> PhiraChartInfo:
         dict_data = yaml.load(fp, Loader=yaml.SafeLoader)
