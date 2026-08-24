@@ -8,6 +8,7 @@ dependencies = [
     "loguru>=0.7.3",
     "pydantic>=2.13.4",
     "pygame-ce>=2.5.8",
+    "pyyaml>=6.0.3",
 ]
 
 [[tool.uv.index]]
