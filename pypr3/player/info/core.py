@@ -1,12 +1,14 @@
-from typing import Any
+from typing import Any, Type
+from pathlib import Path
 
 
 from pydantic import BaseModel
 
 
-from pypr3.player.info.rpe import RPEChartInfo
-from pypr3.player.info.phira import PhiraChartInfo
-from pypr3.player.info.simphi import SimPhiChartInfo
+from pypr3.player.info.rpe import RPEChartInfoParser, RPEChartInfo
+from pypr3.player.info.phira import PhiraChartInfoParser, PhiraChartInfo
+from pypr3.player.info.simphi import SimPhiChartInfoParser, SimPhiChartInfo
+from pypr3.player.info.base import InfoParser
 
 
 class ChartInfo(BaseModel):
@@ -68,3 +70,26 @@ class ChartInfo(BaseModel):
             return cls.from_simphi_info(info)
         else:
             raise TypeError(f"Unsupported info type: {type(info).__name__}")
+
+    @classmethod
+    def from_file(cls, path: str | Path):
+        info_path = Path(path)
+
+        parser: Type[InfoParser]
+
+        match info_path.suffix:
+            case ".txt":
+                parser = RPEChartInfoParser
+
+            case ".yml" | ".yaml":
+                parser = PhiraChartInfoParser
+
+            case ".csv":
+                parser = SimPhiChartInfoParser
+
+            case _:
+                raise ValueError(
+                    f"Unsupported file format: {info_path.suffix}")
+
+        with open(info_path, "r", encoding="utf-8") as f:
+            return cls.from_any(parser.load(f))
