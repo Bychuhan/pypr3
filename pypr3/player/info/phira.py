@@ -23,7 +23,7 @@ class PhiraChartInfo(BaseModel):
     id: int | None = None
     uploader: int | None = None
     name: str = "UK"
-    difficulty: float = 10.0
+    difficulty: float = 10
     level: str = "UK Lv.10"
     charter: str = "UK"
     composer: str = "UK"
@@ -33,12 +33,12 @@ class PhiraChartInfo(BaseModel):
     music: str = "song.mp3"
     illustration: str = "background.png"
     unlockVideo: str | None = None
-    previewStart: float = 0.0
+    previewStart: float = 0
     previewEnd: float | None = None
-    aspectRatio: float = 16.0 / 9.0
+    aspectRatio: float = 16 / 9
     backgroundDim: float = 0.6
-    lineLength: float = 6.0
-    offset: float = 0.0
+    lineLength: float = 6
+    offset: float = 0
     tip: str | None = None
     tags: list[str] = []
     intro: str = ""
@@ -50,7 +50,7 @@ class PhiraChartInfo(BaseModel):
     @model_validator(mode="after")
     def set_default_preview_end(self) -> "PhiraChartInfo":
         if self.previewEnd is None:
-            self.previewEnd = self.previewStart + 15.0
+            self.previewEnd = self.previewStart + 15
         return self
 
 
