@@ -6,6 +6,9 @@ from io import StringIO
 from pydantic import BaseModel, Field, AliasChoices
 
 
+from pypr3.player.info.base import InfoParser
+
+
 class SimPhiChartInfo(BaseModel):
     """
     Reference: https://docs.lchzh.net/project/sim-phi-core/resource#info-csv
@@ -25,7 +28,7 @@ class SimPhiChartInfo(BaseModel):
     BackgroundDim: float = Field(0.6, validation_alias="GlobalAlpha")  # Legacy
 
 
-class SimPhiChartInfoParser:
+class SimPhiChartInfoParser(InfoParser):
     @staticmethod
     def load(fp: IO[str]) -> SimPhiChartInfo:
         reader = csv.DictReader(fp)
