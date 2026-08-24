@@ -3,7 +3,7 @@ from typing import IO
 from io import StringIO
 
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, AliasChoices
 
 
 class SimPhiChartInfo(BaseModel):
@@ -15,13 +15,14 @@ class SimPhiChartInfo(BaseModel):
     Music: str | None = None
     Image: str | None = None
     Name: str = "Unknown"
-    Artist: str = "Unknown"
+    Artist: str = Field(
+        "Unknown", validation_alias=AliasChoices("Composer", "Musician"))
     Level: str = "Unknown"
     Illustrator: str = "Unknown"
-    Charter: str = "Unknown"
+    Charter: str = Field("Unknown", validation_alias="Designer")  # Legacy
     AspectRatio: float = 16 / 9
-    NoteScale: float = 1
-    BackgroundDim: float = 0.6
+    NoteScale: float = Field(1, validation_alias="ScaleRatio")  # Legacy
+    BackgroundDim: float = Field(0.6, validation_alias="GlobalAlpha")  # Legacy
 
 
 class SimPhiChartInfoParser:
