@@ -29,7 +29,7 @@ def init_events(events: list[EventModel], bpm: float, event_type: "EventType") -
         end=convert_event_value(event.end, event_type),
         start2=convert_event_value(event.start2, event_type),
         end2=convert_event_value(event.end2, event_type),
-    ) for event in events])
+    ) for event in sorted(events, key=lambda x: x.startTime)])
 
 
 @dataclass
