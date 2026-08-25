@@ -13,7 +13,7 @@ LINE_HEIGHT = 0.0075
 SPEED_HEIGHT = 0.6
 
 
-def convert_time(time: int, bpm: float) -> float:
+def convert_time(time: float, bpm: float) -> float:
     return 1.875 / bpm * time
 
 
