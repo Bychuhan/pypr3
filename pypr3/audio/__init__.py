@@ -1,5 +1,5 @@
-from .dxsound import directSound
-from .dxsmixer import musicCls
+from .dxsound import DirectSound
+from .dxsmixer import MusicCls
 
 
-__all__ = ["directSound", "musicCls"]
+__all__ = ["DirectSound", "MusicCls"]

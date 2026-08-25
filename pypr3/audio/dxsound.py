@@ -59,7 +59,7 @@ def _loadDirectSound(data: bytes):
     return bufdata, sdesc
 
 
-class directSound:
+class DirectSound:
     def __init__(self, data: bytes | str, enable_cache: bool = True):
         if isinstance(data, str):
             data = open(data, "rb").read()

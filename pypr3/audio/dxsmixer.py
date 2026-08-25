@@ -10,7 +10,7 @@ import time
 from . import dxsound
 
 
-class musicCls:
+class MusicCls:
     def __init__(self):
         self.dxs = None
         self.buffer = None
@@ -40,7 +40,7 @@ class musicCls:
         self.buffer.SetCurrentPosition(min(max(minv, v), maxv))
 
     def load(self, fp: str):
-        new_dxs = dxsound.directSound(fp, enable_cache=False)
+        new_dxs = dxsound.DirectSound(fp, enable_cache=False)
         self.unload()
         self.dxs = new_dxs
 
@@ -131,12 +131,12 @@ class musicCls:
 
 class mixerCls:
     def __init__(self):
-        self.music = musicCls()
+        self.music = MusicCls()
 
     def init(*args, **kwargs) -> None: ...
 
     def Sound(self, fp: str):
-        music = musicCls()
+        music = MusicCls()
         music.load(fp)
         return music
 
