@@ -10,6 +10,8 @@ from pypr3.renderer import Renderer
 LINE_WIDTH = 5.76
 LINE_HEIGHT = 0.0075
 
+SPEED_HEIGHT = 0.6
+
 
 def convert_time(time: int, bpm: float) -> float:
     return 1.875 / bpm * time
@@ -18,6 +20,8 @@ def convert_time(time: int, bpm: float) -> float:
 def convert_event_value(value: float, event_type: "EventType") -> float:
     if event_type == EventType.MOVE:
         return value - 0.5
+    if event_type == EventType.SPEED:
+        return value * SPEED_HEIGHT
     return value
 
 
@@ -30,6 +34,31 @@ def init_events(events: list[EventModel], bpm: float, event_type: "EventType") -
         start2=convert_event_value(event.start2, event_type),
         end2=convert_event_value(event.end2, event_type),
     ) for event in sorted(events, key=lambda x: x.startTime)])
+
+
+def init_speed_events(events: list[SpeedEventModel], bpm: float) -> deque["Event"]:
+    result: list[Event] = []
+
+    fp = 0  # Floor position
+    for event in sorted(events, key=lambda x: x.startTime):
+        start_time = convert_time(event.startTime, bpm)
+        end_time = convert_time(event.endTime, bpm)
+        value = convert_event_value(event.value, EventType.SPEED)
+
+        event_fp = value * (end_time - start_time)
+
+        result.append(
+            Event(
+                start_time=start_time,
+                end_time=end_time,
+                start=fp,
+                end=fp + event_fp
+            )
+        )
+
+        fp += event_fp
+
+    return deque(result)
 
 
 @dataclass
@@ -70,11 +99,13 @@ class Line:
             data.judgeLineRotateEvents, self.bpm, EventType.ROTATE)
         self.disappear_events = init_events(
             data.judgeLineDisappearEvents, self.bpm, EventType.DISAPPEAR)
+        self.speed_events = init_speed_events(data.speedEvents, self.bpm)
 
         self.x: float = 0
         self.y: float = 0
         self.rotation: float = 0
         self.alpha: float = 0
+        self.current_fp: float = 0
 
     def _update_events(self, time: float, events: deque[Event], event_type: EventType) -> None:
         while events and events[0].get_is_end(time):
@@ -88,13 +119,33 @@ class Line:
                     self.rotation = events[0].get_single_value(time)
                 case EventType.DISAPPEAR:
                     self.alpha = events[0].get_single_value(time)
+                case EventType.SPEED:
+                    self.current_fp = events[0].get_single_value(time)
                 case _:
                     pass
+
+    def get_fp(self, time: float):  # Get floor position
+        first, last = 0, len(self.speed_events) - 1
+
+        mid = 0
+        while first <= last:
+            mid = (first + last) // 2
+            event = self.speed_events[mid]
+
+            if event.start_time <= time < event.end_time:
+                return event.get_single_value(time)
+            elif event.start_time > time:
+                last = mid - 1
+            else:  # time >= event.end_time
+                first = mid + 1
+
+        return self.speed_events[-1].get_single_value(time)
 
     def update(self, time: float):
         self._update_events(time, self.move_events, EventType.MOVE)
         self._update_events(time, self.rotate_events, EventType.ROTATE)
         self._update_events(time, self.disappear_events, EventType.DISAPPEAR)
+        self._update_events(time, self.speed_events, EventType.SPEED)
 
     def render(self, renderer: Renderer, screen_size: tuple[int, int]):
         w, h = screen_size
