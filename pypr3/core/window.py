@@ -52,6 +52,12 @@ class Window:
         logger.info(
             f"Window created: size={self.size}, title='{self._title}', resizable={self._resizable}, vsync={self._vsync.name}")
 
+    def handle_events(self, events: list[pygame.Event]):
+        for event in events:
+            if event.type == pygame.WINDOWRESIZED:
+                self._width = event.x
+                self._height = event.y
+
     def _on_size_changed(self):
         if self._is_created:
             self._set_mode()
