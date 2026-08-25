@@ -5,6 +5,12 @@ class ResourceManager:
     def __init__(self, root: str | Path) -> None:
         self.root = Path(root)
 
+    def get_sound(self, file: str) -> bytes:
+        path = self.root / "sounds" / file
+
+        with open(path, "rb") as f:
+            return f.read()
+
     def get_shader(self, name: str) -> tuple[str, str, str | None]:
         vs_path = self.root / "shaders" / name / "vert.glsl"
         fs_path = self.root / "shaders" / name / "frag.glsl"
