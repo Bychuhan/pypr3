@@ -30,22 +30,22 @@ class EventType(IntEnum):
 
 class NoteModel(BaseModel):
     type: NoteType = NoteType.OTHER
-    time: int = 0
+    time: float = 0
     positionX: float = 0
-    holdTime: int = 0
+    holdTime: float = 0
     speed: float = 1
     floorPosition: float = 0
 
 
 class SpeedEventModel(BaseModel):
-    startTime: int = 0
-    endTime: int = 0
+    startTime: float = 0
+    endTime: float = 0
     value: float = 0
 
 
 class EventModel(BaseModel):
-    startTime: int = 0
-    endTime: int = 0
+    startTime: float = 0
+    endTime: float = 0
     start: float = 0
     end: float = 0
     start2: float = 0
