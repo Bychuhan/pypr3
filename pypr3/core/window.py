@@ -12,13 +12,15 @@ class VSyncType(IntEnum):
 
 
 class Window:
-    def __init__(self, width: int, height: int, title: str, resizable: bool = False, vsync: VSyncType = VSyncType.DISABLE):
+    def __init__(self, width: int, height: int, title: str, resizable: bool = False, vsync: VSyncType = VSyncType.DISABLE, multisample: int = 4):
         self._width = width
         self._height = height
         self._title = title
 
         self._vsync = vsync
         self._resizable = resizable
+
+        self._multisample = multisample
 
         self._is_created = False
 
@@ -43,6 +45,10 @@ class Window:
     def create(self):
         if self._is_created:
             raise RuntimeError("Window has already been created")
+
+        if self._multisample > 0:
+            pygame.display.gl_set_attribute(pygame.GL_MULTISAMPLEBUFFERS, 1)
+            pygame.display.gl_set_attribute(pygame.GL_MULTISAMPLESAMPLES, self._multisample)
 
         self._set_mode()
         self._set_caption()
@@ -140,3 +146,7 @@ class Window:
         self._width, self._height = width, height
 
         self._on_size_changed()
+
+    @property
+    def multisample(self):
+        return self._multisample
