@@ -1,10 +1,9 @@
-from enum import IntEnum
 from collections import deque
 from dataclasses import dataclass
 
 
 from pypr3.player.chart import Chart
-from pypr3.player.chart.phi.model import PhiChartModel, JudgeLineModel, EventModel
+from pypr3.player.chart.phi.model import *
 from pypr3.renderer import Renderer
 
 
@@ -31,12 +30,6 @@ def init_events(events: list[EventModel], bpm: float, event_type: "EventType") -
         start2=convert_event_value(event.start2, event_type),
         end2=convert_event_value(event.end2, event_type),
     ) for event in events])
-
-
-class EventType(IntEnum):
-    MOVE = 0
-    ROTATE = 1
-    DISAPPEAR = 2
 
 
 @dataclass

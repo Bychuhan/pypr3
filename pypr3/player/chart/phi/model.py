@@ -21,6 +21,12 @@ class NoteType(IntEnum):
         return cls.OTHER
 
 
+class EventType(IntEnum):
+    MOVE = 0
+    ROTATE = 1
+    DISAPPEAR = 2
+
+
 class NoteModel(BaseModel):
     type: NoteType = NoteType.OTHER
     time: int = 0
