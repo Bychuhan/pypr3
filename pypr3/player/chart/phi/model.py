@@ -25,6 +25,7 @@ class EventType(IntEnum):
     MOVE = 0
     ROTATE = 1
     DISAPPEAR = 2
+    SPEED = 3
 
 
 class NoteModel(BaseModel):
