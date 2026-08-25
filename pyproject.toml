@@ -10,7 +10,9 @@ dependencies = [
     "numpy>=2.5.2",
     "pydantic>=2.13.4",
     "pygame-ce>=2.5.8",
+    "pywin32>=312",
     "pyyaml>=6.0.3",
+    "soundfile>=0.14.0",
 ]
 
 [[tool.uv.index]]
