@@ -12,6 +12,11 @@ class Renderer:
         self.ctx = mgl.create_context(
             require=gl_version, standalone=standalone)
 
+        self.ctx.blend_func = (  # type: ignore
+            mgl.SRC_ALPHA, mgl.ONE_MINUS_SRC_ALPHA,
+            mgl.ONE, mgl.ONE
+        )
+
         self._init_shaders()
 
     def _init_shaders(self):
@@ -34,6 +39,12 @@ class Renderer:
                 0, 3, 2
             ]
         )
+
+    def set_blend(self, enable: bool):
+        if enable:
+            self.ctx.enable(mgl.BLEND)
+        else:
+            self.ctx.disable(mgl.BLEND)
 
     def clear(self, r: float = 0, g: float = 0, b: float = 0, a: float = 0, depth: float = 1):
         self.ctx.clear(r, g, b, a, depth)
