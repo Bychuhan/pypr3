@@ -40,6 +40,26 @@ class Renderer:
             ]
         )
 
+        vs, fs, _ = self._resource_manager.get_shader("texture")
+
+        self._texture_shader = Shader(
+            ctx=self.ctx,
+            vertex_shader=vs,
+            fragment_shader=fs,
+            vertices=[
+                -1.0, -1.0, 0.0, 0.0,
+                1.0, -1.0, 1.0, 0.0,
+                1.0, 1.0, 1.0, 1.0,
+                -1.0, 1.0, 0.0, 1.0
+            ],
+            vertex_format="2f 2f",
+            attributes=["in_pos", "in_texCoord"],
+            indices=[
+                0, 1, 2,
+                0, 3, 2
+            ]
+        )
+
     def set_blend(self, enable: bool):
         if enable:
             self.ctx.enable(mgl.BLEND)
@@ -60,6 +80,23 @@ class Renderer:
         self._rect_shader.set_uniform("color", color)
 
         self._rect_shader.render(mgl.TRIANGLES)
+
+    def render_texture(self, screen_size: tuple[int, int], texture: mgl.Texture, x: float, y: float,
+                       w_scale: float, h_scale: float, rotation: float, anchor: tuple[float, float] = (0.5, 0.5),
+                       color: tuple[float, float, float, float] = (1, 1, 1, 1)):
+        self._texture_shader.set_uniform("screenSize", screen_size)
+        self._texture_shader.set_uniform(
+            "textureSize", (texture.width, texture.height))
+        self._texture_shader.set_uniform("position", (x, y))
+        self._texture_shader.set_uniform("scale", (w_scale, h_scale))
+        self._texture_shader.set_uniform("rotation", rotation)
+        self._texture_shader.set_uniform("anchor", anchor)
+        self._texture_shader.set_uniform("color", color)
+
+        self._texture_shader.set_uniform("texture", 0)
+        texture.use(0)
+
+        self._texture_shader.render(mgl.TRIANGLES)
 
     @property
     def viewport(self):
