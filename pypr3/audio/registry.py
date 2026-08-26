@@ -9,5 +9,9 @@ class SoundRegistry:
         cls._sounds[key] = sound
 
     @classmethod
+    def unregister(cls, key: str) -> DirectSound | None:
+        return cls._sounds.pop(key, None)
+
+    @classmethod
     def get(cls, key: str) -> DirectSound | None:
         return cls._sounds.get(key)
