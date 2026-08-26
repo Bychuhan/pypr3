@@ -1,7 +1,7 @@
 from pypr3.audio import DirectSound
 
 
-class HitSoundRegistry:
+class SoundRegistry:
     _sounds: dict[str, DirectSound] = {}
 
     @classmethod
