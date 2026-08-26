@@ -2,15 +2,26 @@ from collections import deque
 from dataclasses import dataclass
 
 
+import moderngl as mgl
+
+
+from pypr3.audio.registry import SoundRegistry
 from pypr3.player.chart import Chart
 from pypr3.player.chart.phi.model import *
-from pypr3.renderer import Renderer
+from pypr3.renderer import Renderer, TextureRegistry
+from pypr3.audio import DirectSound
+from pypr3.utils import rotate_translate
 
 
 LINE_WIDTH = 5.76
 LINE_HEIGHT = 0.0075
 
 SPEED_HEIGHT = 0.6
+
+NOTE_X = 0.05625
+NOTE_COVER_FP = -1e-3
+NOTE_MAX_VISIBLE_FP = 2
+NOTE_TEXTURE_WIDTH = 0.123
 
 
 def convert_time(time: float, bpm: float) -> float:
@@ -61,6 +72,26 @@ def init_speed_events(events: list[SpeedEventModel], bpm: float) -> deque["Event
     return deque(result)
 
 
+def init_notes(line: "Line", above_notes: list[NoteModel], below_notes: list[NoteModel]) -> tuple[list[list["Note"]], list["Note"]]:
+    all_notes = ([Note(line, note, True) for note in above_notes] +
+                 [Note(line, note, False) for note in below_notes])
+
+    holds: list[Note] = []
+
+    speed_groups: dict[float, list[Note]] = {}
+    for note in all_notes:
+        if note.type == NoteType.OTHER:
+            continue
+        elif note.type == NoteType.HOLD:
+            holds.append(note)
+        else:
+            speed_groups.setdefault(note.speed, []).append(note)
+
+    holds.sort(key=lambda x: x.fp)
+
+    return [sorted(group, key=lambda x: x.fp) for group in (speed_groups.values())], holds
+
+
 @dataclass
 class Event:
     start_time: float
@@ -101,6 +132,9 @@ class Line:
             data.judgeLineDisappearEvents, self.bpm, EventType.DISAPPEAR)
         self.speed_events = init_speed_events(data.speedEvents, self.bpm)
 
+        self.notes, self.holds = init_notes(
+            self, data.notesAbove, data.notesBelow)
+
         self.x: float = 0
         self.y: float = 0
         self.rotation: float = 0
@@ -123,6 +157,40 @@ class Line:
                     self.current_fp = events[0].get_single_value(time)
                 case _:
                     pass
+
+    def _update_notes(self, time: float):
+        for note in self.holds.copy():
+            if note.update(time):
+                self.holds.remove(note)
+
+            if note.base_fp > NOTE_MAX_VISIBLE_FP:
+                break
+
+        for group in self.notes.copy():
+            for note in group.copy():
+                if note.update(time):
+                    group.remove(note)
+
+                if note.base_fp * note.base_speed > NOTE_MAX_VISIBLE_FP:
+                    break
+
+            if not group:
+                self.notes.remove(group)
+
+    def render_holds(self, renderer: Renderer, screen_size: tuple[int, int]):
+        for note in self.holds:
+            if note.base_fp > NOTE_MAX_VISIBLE_FP:
+                break
+
+            note.render(renderer, screen_size)
+
+    def render_notes(self, renderer: Renderer, screen_size: tuple[int, int]):
+        for group in self.notes:
+            for note in group:
+                if note.base_fp * note.base_speed > NOTE_MAX_VISIBLE_FP:
+                    break
+
+                note.render(renderer, screen_size)
 
     def get_fp(self, time: float):  # Get floor position
         first, last = 0, len(self.speed_events) - 1
@@ -147,6 +215,8 @@ class Line:
         self._update_events(time, self.disappear_events, EventType.DISAPPEAR)
         self._update_events(time, self.speed_events, EventType.SPEED)
 
+        self._update_notes(time)
+
     def render(self, renderer: Renderer, screen_size: tuple[int, int]):
         w, h = screen_size
 
@@ -161,9 +231,223 @@ class Line:
         )
 
 
+class Note:
+    _HITSOUND_MAP = {
+        NoteType.TAP: "hitsound.tap",
+        NoteType.DRAG: "hitsound.drag",
+        NoteType.HOLD: "hitsound.hold",
+        NoteType.FLICK: "hitsound.flick"
+    }
+
+    _NORMAL_TEXTURE_MAP: dict[NoteType, tuple[str, str, str]] = {
+        NoteType.TAP: ("note.tap", "none", "none"),
+        NoteType.DRAG: ("note.drag", "none", "none"),
+        NoteType.HOLD: ("note.hold.head", "note.hold.body", "note.hold.tail"),
+        NoteType.FLICK: ("note.flick", "none", "none")
+    }
+
+    _HIGHLIGHT_TEXTURE_MAP: dict[NoteType, tuple[str, str, str]] = {
+        NoteType.TAP: ("note.tap.hl", "none", "none"),
+        NoteType.DRAG: ("note.drag.hl", "none", "none"),
+        NoteType.HOLD: ("note.hold.head.hl", "note.hold.body.hl", "note.hold.tail.hl"),
+        NoteType.FLICK: ("note.flick.hl", "none", "none")
+    }
+
+    def __init__(self, line: Line, data: NoteModel, is_above: bool) -> None:
+        self.line = line
+
+        self.type = data.type
+        self.time = convert_time(data.time, self.line.bpm)
+        self.x_pos = data.positionX * NOTE_X
+        self.hold_time = convert_time(data.holdTime, self.line.bpm)
+        self.fp = self.line.get_fp(self.time)
+
+        direction = 1 if is_above else -1
+
+        if self.type == NoteType.HOLD:
+            self.base_speed = 1
+            self.hold_speed = data.speed * SPEED_HEIGHT * direction
+        else:
+            self.base_speed = data.speed
+            self.hold_speed = 0
+
+        self.speed = self.base_speed * direction
+
+        self.base_fp = self.fp
+        self.current_fp = self.base_fp * self.speed
+
+        self.is_visible = self._get_is_visible()
+        self.is_hited = False
+
+        self.length = self.hold_speed * self.hold_time if self.type == NoteType.HOLD else 0
+        self.end_time = self.time + self.hold_time if self.type == NoteType.HOLD else 0
+
+        # Set by Chart after multihit detection
+        self.textures = []
+        self._texture_sizes = []
+        self.is_highlight = False
+
+    def init_assets(self) -> None:
+        self.hitsound: DirectSound | None = SoundRegistry.get(
+            self._HITSOUND_MAP.get(self.type, "none"))
+
+        self._init_textures()
+
+    def _init_textures(self) -> None:
+        normal_keys = self._NORMAL_TEXTURE_MAP.get(
+            self.type, ("none",) * 3)
+        highlight_keys = self._HIGHLIGHT_TEXTURE_MAP.get(
+            self.type, ("none",) * 3)
+
+        textures: list[mgl.Texture | None] = []
+        texture_sizes: list[tuple[float, float]] = []
+
+        for normal_key, highlight_key in zip(normal_keys, highlight_keys):
+            normal_tex = TextureRegistry.get(normal_key)
+            highlight_tex = TextureRegistry.get(highlight_key)
+
+            if self.is_highlight and highlight_tex:
+                tex = highlight_tex
+                w_scale = highlight_tex.width / normal_tex.width if normal_tex else 1.0
+                tex_w = NOTE_TEXTURE_WIDTH * w_scale
+            else:
+                tex = normal_tex
+                tex_w = NOTE_TEXTURE_WIDTH
+
+            textures.append(tex)
+            texture_sizes.append(self._calc_texture_size(tex, tex_w))
+
+        self.textures = textures
+        self._texture_sizes = texture_sizes
+
+    def _calc_texture_size(self, tex: mgl.Texture | None, width: float) -> tuple[float, float]:
+        if tex is None:
+            return (1, 1)
+        return (width, width / (tex.width / tex.height))
+
+    def _get_is_visible(self):
+        if self.type == NoteType.HOLD:
+            return self.hold_time != 0 and self.hold_speed != 0
+
+        return True
+
+    def update(self, time: float) -> bool:
+        if time >= self.time:
+            self.base_fp = 0
+            self.current_fp = 0
+
+            if not self.is_hited:
+                self.is_hited = True
+                if self.hitsound:
+                    self.hitsound.play()
+
+            if self.type == NoteType.HOLD and time < self.end_time:
+                self.length = (self.end_time - time) * self.hold_speed
+                return False
+            else:
+                return True
+        else:
+            self.base_fp = self.fp - self.line.current_fp
+            self.current_fp = self.base_fp * self.speed
+
+        return False
+
+    def render(self, renderer: Renderer, screen_size: tuple[int, int]) -> None:
+        if (self.base_fp * self.base_speed < NOTE_COVER_FP and not self.is_hited):
+            return
+        if not self.is_visible:
+            return
+        if self.base_fp * self.base_speed > NOTE_MAX_VISIBLE_FP:
+            return
+
+        if not self.textures:
+            return
+
+        w, h = screen_size
+        x, y = rotate_translate(
+            self.line.x * w, self.line.y * h, self.line.rotation,
+            self.x_pos * w, self.current_fp * h
+        )
+
+        if self.type == NoteType.HOLD:
+            self._render_hold(renderer, screen_size, x, y)
+        else:
+            self._render_single(renderer, screen_size, x, y)
+
+    def _render_single(self, renderer: Renderer, screen_size: tuple[int, int], x: float, y: float) -> None:
+        self._render_texture(renderer, screen_size, 0, x, y)
+
+    def _render_hold(self, renderer: Renderer, screen_size: tuple[int, int], x: float, y: float) -> None:
+        w, h = screen_size
+
+        # Head
+        if not self.is_hited:
+            if not self._render_texture(renderer, screen_size, 0, x, y, anchor=(0.5, 1)):
+                return
+
+        # Body
+        tex_w, _ = self._texture_sizes[1]
+        if not self._render_texture(renderer, screen_size, 1, x, y,
+                                    w_scale=1, h_scale=self.length * h, anchor=(0.5, 0),
+                                    size_override=(round(tex_w * w), 1)):
+            return
+
+        # Tail
+        end_x, end_y = rotate_translate(
+            x, y, self.line.rotation, 0, self.length * h)
+        self._render_texture(renderer, screen_size, 2,
+                             end_x, end_y, anchor=(0.5, 0))
+
+    def _render_texture(self, renderer: Renderer, screen_size: tuple[int, int], index: int,
+                        x: float, y: float, w_scale: float = 1.0, h_scale: float = 1.0,
+                        anchor: tuple[float, float] = (0.5, 0.5), size_override: tuple[int, int] | None = None) -> bool:
+        texture = self.textures[index]
+        if texture is None:
+            return False
+
+        if size_override is None:
+            tex_w, tex_h = self._texture_sizes[index]
+            w, _ = screen_size
+            texture_size = (round(tex_w * w), round(tex_h * w))
+        else:
+            texture_size = size_override
+
+        renderer.render_texture(
+            screen_size,
+            texture=texture,
+            x=x,
+            y=y,
+            w_scale=w_scale,
+            h_scale=h_scale,
+            rotation=self.line.rotation,
+            anchor=anchor,
+            texture_size=texture_size
+        )
+        return True
+
+
 class PhiChart(Chart):
     def __init__(self, data: PhiChartModel) -> None:
         self.lines = [Line(line_model) for line_model in data.judgeLineList]
+
+        self._init_note_assets()
+
+    def _init_note_assets(self) -> None:
+        time_groups: dict[float, list[Note]] = {}
+
+        for line in self.lines:
+            for group in line.notes:
+                for note in group:
+                    time_groups.setdefault(note.time, []).append(note)
+
+            for note in line.holds:
+                time_groups.setdefault(note.time, []).append(note)
+
+        for notes in time_groups.values():
+            for note in notes:
+                note.is_highlight = len(notes) > 1
+
+                note.init_assets()
 
     def update(self, time: float):
         for line in self.lines:
@@ -172,3 +456,9 @@ class PhiChart(Chart):
     def render(self, renderer: Renderer, screen_size: tuple[int, int]):
         for line in self.lines:
             line.render(renderer, screen_size)
+
+        for line in self.lines:
+            line.render_holds(renderer, screen_size)
+
+        for line in self.lines:
+            line.render_notes(renderer, screen_size)
