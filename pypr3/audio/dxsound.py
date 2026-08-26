@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import math
 import typing
+import warnings
 from io import BytesIO
 
 import win32comext.directsound.directsound as ds
@@ -13,7 +14,6 @@ import win32event as w32e
 from pywintypes import WAVEFORMATEX
 import soundfile as sf
 import numpy as np
-from loguru import logger
 
 CACHE_BUFFER_MAXSIZE = 32
 PRE_CACHE_SIZE = CACHE_BUFFER_MAXSIZE
@@ -51,7 +51,7 @@ def _loadDirectSound(data: bytes):
         sdesc.lpwfxFormat = wfx
 
     if len(bufdata) > ds.DSBSIZE_MAX:
-        logger.warning(f"音频缓冲区大小过大 ({len(bufdata)} > {ds.DSBSIZE_MAX})，已自动截断")
+        warnings.warn(f"Sound buffer size is too large ({len(bufdata)} > {ds.DSBSIZE_MAX}), truncated.", RuntimeWarning)
         bufdata = bufdata[:ds.DSBSIZE_MAX]
 
     sdesc.dwBufferBytes = len(bufdata)
