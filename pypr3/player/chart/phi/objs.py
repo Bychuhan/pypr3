@@ -372,10 +372,7 @@ class Note:
         if self.type == NoteType.HOLD:
             self._render_hold(renderer, screen_size, x, y)
         else:
-            self._render_single(renderer, screen_size, x, y)
-
-    def _render_single(self, renderer: Renderer, screen_size: tuple[int, int], x: float, y: float) -> None:
-        self._render_texture(renderer, screen_size, 0, x, y)
+            self._render_texture(renderer, screen_size, 0, x, y)
 
     def _render_hold(self, renderer: Renderer, screen_size: tuple[int, int], x: float, y: float) -> None:
         w, h = screen_size
