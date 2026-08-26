@@ -83,10 +83,10 @@ class Renderer:
 
     def render_texture(self, screen_size: tuple[int, int], texture: mgl.Texture, x: float, y: float,
                        w_scale: float, h_scale: float, rotation: float, anchor: tuple[float, float] = (0.5, 0.5),
-                       color: tuple[float, float, float, float] = (1, 1, 1, 1)):
+                       color: tuple[float, float, float, float] = (1, 1, 1, 1), texture_size: tuple[int, int] | None = None):
         self._texture_shader.set_uniform("screenSize", screen_size)
         self._texture_shader.set_uniform(
-            "textureSize", (texture.width, texture.height))
+            "textureSize", texture_size or (texture.width, texture.height))
         self._texture_shader.set_uniform("position", (x, y))
         self._texture_shader.set_uniform("scale", (w_scale, h_scale))
         self._texture_shader.set_uniform("rotation", rotation)
