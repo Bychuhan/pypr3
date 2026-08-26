@@ -5,6 +5,12 @@ class ResourceManager:
     def __init__(self, root: str | Path) -> None:
         self.root = Path(root)
 
+    def get_texture(self, file: str) -> bytes:
+        path = self.root / "textures" / file
+
+        with open(path, "rb") as f:
+            return f.read()
+
     def get_sound(self, file: str) -> bytes:
         path = self.root / "sounds" / file
 
