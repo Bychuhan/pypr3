@@ -267,9 +267,11 @@ class Note:
         if self.type == NoteType.HOLD:
             self.base_speed = 1
             self.hold_speed = data.speed * SPEED_HEIGHT * self.direction
+            self.hold_direction = 1 if self.hold_speed >= 0 else -1
         else:
             self.base_speed = data.speed
             self.hold_speed = 0
+            self.hold_direction = 0
 
         self.speed = self.base_speed * self.direction
 
@@ -380,7 +382,7 @@ class Note:
 
         # Head
         if not self.is_hited:
-            if not self._render_texture(renderer, screen_size, 0, x, y, anchor=(0.5, 1)):
+            if not self._render_texture(renderer, screen_size, 0, x, y, h_scale=self.hold_direction, anchor=(0.5, 1)):
                 return
 
         # Body
@@ -394,7 +396,7 @@ class Note:
         end_x, end_y = rotate_translate(
             x, y, self.line.rotation, 0, self.length * h)
         self._render_texture(renderer, screen_size, 2,
-                             end_x, end_y, anchor=(0.5, 0))
+                             end_x, end_y, h_scale=self.hold_direction, anchor=(0.5, 0))
 
     def _render_texture(self, renderer: Renderer, screen_size: tuple[int, int], index: int,
                         x: float, y: float, w_scale: float = 1.0, h_scale: float = 1.0,
