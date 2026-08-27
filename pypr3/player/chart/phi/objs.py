@@ -283,13 +283,13 @@ class Note:
         self.end_time = self.time + self.hold_time if self.type == NoteType.HOLD else 0
 
         # Set by Chart after multihit detection
-        self.hitsound = None
-        self.textures = []
-        self._texture_sizes = []
+        self.hitsound: DirectSound | None = None
+        self.textures: list[mgl.Texture | None] = []
+        self._texture_sizes: list[tuple[float, float]] = []
         self.is_highlight = False
 
     def init_assets(self) -> None:
-        self.hitsound: DirectSound | None = SoundRegistry.get(
+        self.hitsound = SoundRegistry.get(
             self._HITSOUND_MAP.get(self.type, "none"))
 
         self._init_textures()
