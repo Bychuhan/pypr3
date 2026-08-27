@@ -283,6 +283,7 @@ class Note:
         self.end_time = self.time + self.hold_time if self.type == NoteType.HOLD else 0
 
         # Set by Chart after multihit detection
+        self.hitsound = None
         self.textures = []
         self._texture_sizes = []
         self.is_highlight = False
