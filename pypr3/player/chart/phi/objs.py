@@ -262,16 +262,16 @@ class Note:
         self.hold_time = convert_time(data.holdTime, self.line.bpm)
         self.fp = self.line.get_fp(self.time)
 
-        direction = 1 if is_above else -1
+        self.direction = 1 if is_above else -1
 
         if self.type == NoteType.HOLD:
             self.base_speed = 1
-            self.hold_speed = data.speed * SPEED_HEIGHT * direction
+            self.hold_speed = data.speed * SPEED_HEIGHT * self.direction
         else:
             self.base_speed = data.speed
             self.hold_speed = 0
 
-        self.speed = self.base_speed * direction
+        self.speed = self.base_speed * self.direction
 
         self.base_fp = self.fp
         self.current_fp = self.base_fp * self.speed
