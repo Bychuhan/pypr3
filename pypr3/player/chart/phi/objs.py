@@ -309,8 +309,12 @@ class Note:
         self.is_visible = self._get_is_visible()
         self.is_hited: bool = False
 
-        self.length: float = self.hold_speed * self.hold_time if self.type == NoteType.HOLD else 0
-        self.end_time: float = self.time + self.hold_time if self.type == NoteType.HOLD else 0
+        if self.type == NoteType.HOLD:
+            self.length = self.hold_speed * self.hold_time
+            self.end_time = self.time + self.hold_time
+        else:
+            self.length = 0
+            self.end_time = 0
 
         # Set by Chart after multihit detection
         self.hitsound: DirectSound | None = None
