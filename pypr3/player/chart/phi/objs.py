@@ -301,22 +301,22 @@ class Note:
             self.hold_speed = 0
             self.hold_direction = 0
 
-        self.speed = self.base_speed * self.direction
+        self.speed: float = self.base_speed * self.direction
 
         self.base_fp = self.fp
         self.current_fp = self.base_fp * self.speed
 
         self.is_visible = self._get_is_visible()
-        self.is_hited = False
+        self.is_hited: bool = False
 
-        self.length = self.hold_speed * self.hold_time if self.type == NoteType.HOLD else 0
-        self.end_time = self.time + self.hold_time if self.type == NoteType.HOLD else 0
+        self.length: float = self.hold_speed * self.hold_time if self.type == NoteType.HOLD else 0
+        self.end_time: float = self.time + self.hold_time if self.type == NoteType.HOLD else 0
 
         # Set by Chart after multihit detection
         self.hitsound: DirectSound | None = None
         self.textures: list[mgl.Texture | None] = []
         self._texture_sizes: list[tuple[float, float]] = []
-        self.is_highlight = False
+        self.is_highlight: bool = False
 
         self.should_spawn_hit: bool = False
         self.hit_time: float = 0
