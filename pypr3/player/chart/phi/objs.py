@@ -182,7 +182,7 @@ class Line:
                 if note.should_spawn_hit:
                     self.hits.append(Hit(
                         x=note.x_pos, start_time=note.hit_time,
-                    line_x=self.x, line_y=self.y, line_r=self.rotation
+                        line_x=self.x, line_y=self.y, line_r=self.rotation
                     ))
 
                 if note.base_fp * note.base_speed > NOTE_MAX_VISIBLE_FP:
