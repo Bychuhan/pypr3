@@ -243,6 +243,9 @@ class Line:
         self._update_hits(time)
 
     def render(self, renderer: Renderer, screen_size: tuple[int, int]):
+        if self.alpha <= 0:
+            return
+
         w, h = screen_size
 
         renderer.render_rect(
