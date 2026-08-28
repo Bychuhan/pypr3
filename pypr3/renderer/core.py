@@ -60,6 +60,26 @@ class Renderer:
             ]
         )
 
+        vs, fs, _ = self._resource_manager.get_shader("hit")
+
+        self._hit_shader = Shader(
+            ctx=self.ctx,
+            vertex_shader=vs,
+            fragment_shader=fs,
+            vertices=[
+                -1.0, -1.0, 0.0, 0.0,
+                1.0, -1.0, 1.0, 0.0,
+                1.0, 1.0, 1.0, 1.0,
+                -1.0, 1.0, 0.0, 1.0
+            ],
+            vertex_format="2f 2f",
+            attributes=["in_pos", "in_texCoord"],
+            indices=[
+                0, 1, 2,
+                0, 3, 2
+            ]
+        )
+
     def set_blend(self, enable: bool):
         if enable:
             self.ctx.enable(mgl.BLEND)
@@ -97,6 +117,27 @@ class Renderer:
         texture.use(0)
 
         self._texture_shader.render(mgl.TRIANGLES)
+
+    def render_hit(self, screen_size: tuple[int, int], texture: mgl.Texture, x: float, y: float,
+                       w_scale: float, h_scale: float, rotation: float, anchor: tuple[float, float] = (0.5, 0.5),
+                       color: tuple[float, float, float, float] = (1, 1, 1, 1), frame: float = 0, grid_size: tuple[int, int] = (1, 1),
+                       texture_size: tuple[int, int] | None = None):
+        self._hit_shader.set_uniform("screenSize", screen_size)
+        self._hit_shader.set_uniform(
+            "textureSize", texture_size or (texture.width, texture.height))
+        self._hit_shader.set_uniform("position", (x, y))
+        self._hit_shader.set_uniform("scale", (w_scale, h_scale))
+        self._hit_shader.set_uniform("rotation", rotation)
+        self._hit_shader.set_uniform("anchor", anchor)
+        self._hit_shader.set_uniform("color", color)
+
+        self._hit_shader.set_uniform("gridSize", grid_size)
+        self._hit_shader.set_uniform("frameIndex", frame)
+
+        self._hit_shader.set_uniform("texture", 0)
+        texture.use(0)
+
+        self._hit_shader.render(mgl.TRIANGLES)
 
     @property
     def viewport(self):
