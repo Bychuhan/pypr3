@@ -6,7 +6,7 @@ import moderngl as mgl
 
 
 from pypr3.audio.registry import SoundRegistry
-from pypr3.player.chart import Chart
+from pypr3.player.chart import Chart, Hit
 from pypr3.player.chart.phi.model import *
 from pypr3.renderer import Renderer, TextureRegistry
 from pypr3.audio import DirectSound
@@ -141,6 +141,8 @@ class Line:
         self.alpha: float = 0
         self.current_fp: float = 0
 
+        self.hits: list[Hit] = []
+
     def _update_events(self, time: float, events: deque[Event], event_type: EventType) -> None:
         while events and events[0].get_is_end(time):
             events.popleft()
@@ -163,6 +165,12 @@ class Line:
             if note.update(time):
                 self.holds.remove(note)
 
+            if note.should_spawn_hit:
+                self.hits.append(Hit(
+                    x=note.x_pos, start_time=note.hit_time,
+                    line_x=self.x, line_y=self.y, line_r=self.rotation
+                ))
+
             if note.base_fp > NOTE_MAX_VISIBLE_FP:
                 break
 
@@ -171,11 +179,22 @@ class Line:
                 if note.update(time):
                     group.remove(note)
 
+                if note.should_spawn_hit:
+                    self.hits.append(Hit(
+                        x=note.x_pos, start_time=note.hit_time,
+                    line_x=self.x, line_y=self.y, line_r=self.rotation
+                    ))
+
                 if note.base_fp * note.base_speed > NOTE_MAX_VISIBLE_FP:
                     break
 
             if not group:
                 self.notes.remove(group)
+
+    def _update_hits(self, time: float):
+        for hit in self.hits.copy():
+            if hit.update(time):
+                self.hits.remove(hit)
 
     def render_holds(self, renderer: Renderer, screen_size: tuple[int, int]):
         for note in self.holds:
@@ -191,6 +210,10 @@ class Line:
                     break
 
                 note.render(renderer, screen_size)
+
+    def render_hits(self, renderer: Renderer, screen_size: tuple[int, int]):
+        for hit in self.hits.copy():
+            hit.render(renderer, screen_size)
 
     def get_fp(self, time: float):  # Get floor position
         first, last = 0, len(self.speed_events) - 1
@@ -216,6 +239,8 @@ class Line:
         self._update_events(time, self.speed_events, EventType.SPEED)
 
         self._update_notes(time)
+
+        self._update_hits(time)
 
     def render(self, renderer: Renderer, screen_size: tuple[int, int]):
         w, h = screen_size
@@ -290,6 +315,9 @@ class Note:
         self._texture_sizes: list[tuple[float, float]] = []
         self.is_highlight = False
 
+        self.should_spawn_hit: bool = False
+        self.hit_time: float = 0
+
     def init_assets(self) -> None:
         self.hitsound = SoundRegistry.get(
             self._HITSOUND_MAP.get(self.type, "none"))
@@ -338,6 +366,9 @@ class Note:
         if time >= self.time:
             self.base_fp = 0
             self.current_fp = 0
+
+            self.should_spawn_hit = True
+            self.hit_time = time
 
             if not self.is_hited:
                 self.is_hited = True
@@ -462,3 +493,6 @@ class PhiChart(Chart):
 
         for line in self.lines:
             line.render_notes(renderer, screen_size)
+
+        for line in self.lines:
+            line.render_hits(renderer, screen_size)
