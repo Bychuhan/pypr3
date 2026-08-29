@@ -1,13 +1,13 @@
 #version 330 core
 
 in vec2 texCoord;
+in vec4 color;
+flat in int frameIndex;
 
 out vec4 fragColor;
 
 uniform sampler2D texture;
-uniform vec4 color;
 uniform vec2 gridSize;
-uniform float frameIndex;
 
 void main() {
     float cols = gridSize.x;
