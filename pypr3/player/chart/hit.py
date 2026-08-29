@@ -56,10 +56,9 @@ class HitParticle:
             alpha = particle_alpha(progress)
             size = particle_size_easing(progress) * PARTICLE_SIZE * w
 
-            renderer.render_rect(
+            renderer.render_particle(
                 screen_size=screen_size,
-                x=x, y=y, width=size, height=size,
-                rotation=0, color=(*HIT_COLOR, alpha)
+                x=x, y=y, size=size, color=(*HIT_COLOR, alpha)
             )
 
 
