@@ -1,7 +1,7 @@
 import random
 import math
 
-from pypr3.renderer import Renderer, TextureRegistry
+from pypr3.renderer import Renderer
 from pypr3.utils import rotate_translate
 
 
@@ -56,9 +56,9 @@ class HitParticle:
             alpha = particle_alpha(progress)
             size = particle_size_easing(progress) * PARTICLE_SIZE * w
 
-            renderer.render_particle(
-                screen_size=screen_size,
-                x=x, y=y, size=size, color=(*HIT_COLOR, alpha)
+            renderer.hit_renderer.add_particle(
+                x=x, y=y,
+                color=(*HIT_COLOR, alpha), size=size
             )
 
 
@@ -121,15 +121,8 @@ class Hit:
             alpha = 1 - (progress * (1 - HIT_ALPHA))
             color = (*HIT_COLOR, alpha)
 
-            texture = TextureRegistry.get("hit_fx")
-
-            if texture:
-                renderer.render_hit(
-                    screen_size=screen_size,
-                    texture=texture,
-                    x=x, y=y,
-                    color=color,
-                    grid_size=HIT_GRID_SIZE,
-                    frame=self.frame,
-                    texture_size=(round(HIT_SIZE * w), round(HIT_SIZE * w))
-                )
+            renderer.hit_renderer.add_hit(
+                x=x, y=y,
+                color=color,
+                frame=self.frame
+            )
