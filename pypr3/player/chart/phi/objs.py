@@ -324,6 +324,7 @@ class Note:
 
         self.should_spawn_hit: bool = False
         self.hit_time: float = 0
+        self.hold_next_spawn_hit_time = self.time + 30 / self.line.bpm
 
     def init_assets(self) -> None:
         self.hitsound = SoundRegistry.get(
@@ -376,16 +377,24 @@ class Note:
             self.base_fp = 0
             self.current_fp = 0
 
-            self.should_spawn_hit = True
-            self.hit_time = time
-
             if not self.is_hited:
                 self.is_hited = True
+
                 if self.hitsound:
                     self.hitsound.play()
 
+                self.should_spawn_hit = True
+                self.hit_time = time
+
             if self.type == NoteType.HOLD and time < self.end_time:
                 self.length = (self.end_time - time) * self.hold_speed
+
+                if time >= self.hold_next_spawn_hit_time:
+                    self.should_spawn_hit = True
+                    self.hit_time = self.hold_next_spawn_hit_time
+
+                    self.hold_next_spawn_hit_time += 30 / self.line.bpm
+
                 return False
             else:
                 return True
