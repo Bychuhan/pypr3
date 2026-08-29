@@ -370,6 +370,8 @@ class Note:
         return True
 
     def update(self, time: float) -> bool:
+        self.should_spawn_hit = False
+
         if time >= self.time:
             self.base_fp = 0
             self.current_fp = 0
