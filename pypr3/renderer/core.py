@@ -119,8 +119,8 @@ class Renderer:
         self._texture_shader.render(mgl.TRIANGLES)
 
     def render_hit(self, screen_size: tuple[int, int], texture: mgl.Texture, x: float, y: float,
-                       color: tuple[float, float, float, float] = (1, 1, 1, 1), frame: float = 0, grid_size: tuple[int, int] = (1, 1),
-                       texture_size: tuple[int, int] | None = None):
+                   color: tuple[float, float, float, float] = (1, 1, 1, 1), frame: float = 0, grid_size: tuple[int, int] = (1, 1),
+                   texture_size: tuple[int, int] | None = None):
         self._hit_shader.set_uniform("screenSize", screen_size)
         self._hit_shader.set_uniform(
             "textureSize", texture_size or (texture.width, texture.height))
