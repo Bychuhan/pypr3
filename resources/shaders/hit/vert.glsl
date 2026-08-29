@@ -7,20 +7,11 @@ out vec2 texCoord;
 
 uniform vec2 position;
 uniform vec2 textureSize;
-uniform vec2 anchor;
-uniform float rotation;
-uniform vec2 scale;
 
 uniform vec2 screenSize;
 
 void main() {
-    vec2 anchorOffset = (- (anchor - 0.5)) * textureSize * 2;
-
-    float c = cos(radians(rotation));
-    float s = sin(radians(rotation));
-    mat2 rotMat = mat2(c, -s, s, c);
-
-    vec2 realPos = ((textureSize * in_pos + anchorOffset) * scale * rotMat + position * 2) / screenSize;
+    vec2 realPos = (position * 2 + textureSize * in_pos) / screenSize;
 
     gl_Position = vec4(realPos, 0., 1.);
 

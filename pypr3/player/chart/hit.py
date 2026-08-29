@@ -129,8 +129,7 @@ class Hit:
                     screen_size=screen_size,
                     texture=texture,
                     x=x, y=y,
-                    w_scale=1, h_scale=1,
-                    rotation=0, color=color,
+                    color=color,
                     grid_size=HIT_GRID_SIZE,
                     frame=self.frame,
                     texture_size=(round(HIT_SIZE * w), round(HIT_SIZE * w))
