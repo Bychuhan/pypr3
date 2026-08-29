@@ -478,6 +478,7 @@ class Note:
 
 class PhiChart(Chart):
     def __init__(self, data: PhiChartModel) -> None:
+        self.offset = data.offset
         self.lines = [Line(line_model) for line_model in data.judgeLineList]
 
         self._init_note_assets()
@@ -500,8 +501,10 @@ class PhiChart(Chart):
                 note.init_assets()
 
     def update(self, time: float):
+        chart_time = time - self.offset
+
         for line in self.lines:
-            line.update(time)
+            line.update(chart_time)
 
     def render(self, renderer: Renderer, screen_size: tuple[int, int]):
         w = screen_size[0]
