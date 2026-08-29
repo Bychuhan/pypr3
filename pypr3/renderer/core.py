@@ -3,6 +3,7 @@ import moderngl as mgl
 
 from pypr3.core import ResourceManager
 from pypr3.renderer import Shader
+from pypr3.renderer.hit import HitRenderer
 
 
 class Renderer:
@@ -18,6 +19,8 @@ class Renderer:
         )
 
         self._init_shaders()
+
+        self.hit_renderer = HitRenderer(self.ctx, self._resource_manager)
 
     def _init_shaders(self):
         vs, fs, _ = self._resource_manager.get_shader("rect")
@@ -54,46 +57,6 @@ class Renderer:
             ],
             vertex_format="2f 2f",
             attributes=["in_pos", "in_texCoord"],
-            indices=[
-                0, 1, 2,
-                0, 3, 2
-            ]
-        )
-
-        vs, fs, _ = self._resource_manager.get_shader("hit")
-
-        self._hit_shader = Shader(
-            ctx=self.ctx,
-            vertex_shader=vs,
-            fragment_shader=fs,
-            vertices=[
-                -1.0, -1.0, 0.0, 0.0,
-                1.0, -1.0, 1.0, 0.0,
-                1.0, 1.0, 1.0, 1.0,
-                -1.0, 1.0, 0.0, 1.0
-            ],
-            vertex_format="2f 2f",
-            attributes=["in_pos", "in_texCoord"],
-            indices=[
-                0, 1, 2,
-                0, 3, 2
-            ]
-        )
-
-        vs, fs, _ = self._resource_manager.get_shader("particle")
-
-        self._particle_shader = Shader(
-            ctx=self.ctx,
-            vertex_shader=vs,
-            fragment_shader=fs,
-            vertices=[
-                -1.0, -1.0,
-                1.0, -1.0,
-                1.0, 1.0,
-                -1.0, 1.0,
-            ],
-            vertex_format="2f",
-            attributes=["in_pos"],
             indices=[
                 0, 1, 2,
                 0, 3, 2
@@ -137,32 +100,6 @@ class Renderer:
         texture.use(0)
 
         self._texture_shader.render(mgl.TRIANGLES)
-
-    def render_hit(self, screen_size: tuple[int, int], texture: mgl.Texture, x: float, y: float,
-                   color: tuple[float, float, float, float] = (1, 1, 1, 1), frame: float = 0, grid_size: tuple[int, int] = (1, 1),
-                   texture_size: tuple[int, int] | None = None):
-        self._hit_shader.set_uniform("screenSize", screen_size)
-        self._hit_shader.set_uniform(
-            "textureSize", texture_size or (texture.width, texture.height))
-        self._hit_shader.set_uniform("position", (x, y))
-        self._hit_shader.set_uniform("color", color)
-
-        self._hit_shader.set_uniform("gridSize", grid_size)
-        self._hit_shader.set_uniform("frameIndex", frame)
-
-        self._hit_shader.set_uniform("texture", 0)
-        texture.use(0)
-
-        self._hit_shader.render(mgl.TRIANGLES)
-
-    def render_particle(self, screen_size: tuple[int, int], size: float,
-                        x: float, y: float, color: tuple[float, float, float, float] = (1, 1, 1, 1)):
-        self._particle_shader.set_uniform("screenSize", screen_size)
-        self._particle_shader.set_uniform("size", (size, size))
-        self._particle_shader.set_uniform("position", (x, y))
-        self._particle_shader.set_uniform("color", color)
-
-        self._particle_shader.render(mgl.TRIANGLES)
 
     @property
     def viewport(self):
