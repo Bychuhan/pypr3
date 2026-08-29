@@ -80,6 +80,26 @@ class Renderer:
             ]
         )
 
+        vs, fs, _ = self._resource_manager.get_shader("particle")
+
+        self._particle_shader = Shader(
+            ctx=self.ctx,
+            vertex_shader=vs,
+            fragment_shader=fs,
+            vertices=[
+                -1.0, -1.0,
+                1.0, -1.0,
+                1.0, 1.0,
+                -1.0, 1.0,
+            ],
+            vertex_format="2f",
+            attributes=["in_pos"],
+            indices=[
+                0, 1, 2,
+                0, 3, 2
+            ]
+        )
+
     def set_blend(self, enable: bool):
         if enable:
             self.ctx.enable(mgl.BLEND)
@@ -134,6 +154,15 @@ class Renderer:
         texture.use(0)
 
         self._hit_shader.render(mgl.TRIANGLES)
+
+    def render_particle(self, screen_size: tuple[int, int], size: float,
+                        x: float, y: float, color: tuple[float, float, float, float] = (1, 1, 1, 1)):
+        self._particle_shader.set_uniform("screenSize", screen_size)
+        self._particle_shader.set_uniform("size", (size, size))
+        self._particle_shader.set_uniform("position", (x, y))
+        self._particle_shader.set_uniform("color", color)
+
+        self._particle_shader.render(mgl.TRIANGLES)
 
     @property
     def viewport(self):
