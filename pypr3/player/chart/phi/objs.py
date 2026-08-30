@@ -537,3 +537,10 @@ class PhiChart(Chart):
                 grid_size=HIT_GRID_SIZE,
                 texture_size=(round(HIT_SIZE * w), round(HIT_SIZE * w))
             )
+
+    @classmethod
+    def from_any(cls, data: Any) -> "PhiChart":
+        if isinstance(data, dict):
+            return cls(data=PhiChartModel.model_validate(data))
+        else:
+            raise TypeError(f"Expected dict, got {type(data).__name__}")
