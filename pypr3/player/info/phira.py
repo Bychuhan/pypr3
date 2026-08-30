@@ -46,6 +46,10 @@ class PhiraChartInfo(BaseModel):
     tags: list[str] = []
     intro: str = ""
     holdPartialCover: bool = False
+    noteUniformScale: bool = False
+    forceAspectRatio: bool = False
+    useRpe170Speed: bool | None = None
+    useAttachUiFix: bool | None = True
     created: datetime | None = None
     updated: datetime | None = None
     chartUpdated: datetime | None = None
