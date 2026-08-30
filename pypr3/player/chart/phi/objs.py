@@ -386,7 +386,7 @@ class Note:
                     self.hitsound.play()
 
                 self.should_spawn_hit = True
-                self.hit_time = time
+                self.hit_time = self.time
 
             if self.type == NoteType.HOLD and time < self.end_time:
                 self.length = (self.end_time - time) * self.hold_speed
