@@ -1,5 +1,6 @@
 from collections import deque
 from dataclasses import dataclass
+from typing import Any
 
 
 import moderngl as mgl
