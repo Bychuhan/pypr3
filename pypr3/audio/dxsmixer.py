@@ -39,7 +39,7 @@ class MusicCls:
         maxv = self.dxs._sdesc.dwBufferBytes - 1
         self.buffer.SetCurrentPosition(min(max(minv, v), maxv))
 
-    def load(self, fp: str):
+    def load(self, fp: str | bytes):
         new_dxs = dxsound.DirectSound(fp, enable_cache=False)
         self.unload()
         self.dxs = new_dxs
