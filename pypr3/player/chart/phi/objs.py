@@ -7,8 +7,8 @@ import moderngl as mgl
 
 
 from pypr3.audio.registry import SoundRegistry
-from pypr3.player.chart import Chart, Hit
-from pypr3.player.chart.hit import HIT_GRID_SIZE, HIT_SIZE
+from pypr3.player.chart import Chart
+from pypr3.player.chart.hit import Hit, HIT_GRID_SIZE, HIT_SIZE
 from pypr3.player.chart.phi.model import *
 from pypr3.renderer import Renderer, TextureRegistry
 from pypr3.audio import DirectSound
