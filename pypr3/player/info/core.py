@@ -71,8 +71,8 @@ class ChartInfo(BaseModel):
         else:
             raise TypeError(f"Unsupported info type: {type(info).__name__}")
 
-    @classmethod
-    def from_file(cls, path: str | Path):
+    @staticmethod
+    def get_parser(path: str | Path) -> Type[InfoParser]:
         info_path = Path(path)
 
         parser: Type[InfoParser]
@@ -90,6 +90,14 @@ class ChartInfo(BaseModel):
             case _:
                 raise ValueError(
                     f"Unsupported file format: {info_path.suffix}")
+
+        return parser
+
+    @classmethod
+    def from_file(cls, path: str | Path):
+        info_path = Path(path)
+
+        parser: Type[InfoParser] = cls.get_parser(path)
 
         with open(info_path, "r", encoding="utf-8") as f:
             return cls.from_any(parser.load(f))
