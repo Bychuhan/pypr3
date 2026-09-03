@@ -63,6 +63,8 @@ class HitParticle:
 
 
 class Hit:
+    _counter = 0
+
     def __init__(self, x: float, start_time: float, line_x: float, line_y: float, line_r: float,):
         self.x = x
         self.start_time = start_time
@@ -74,12 +76,14 @@ class Hit:
         self.now_time: float = 0
         self.frame: int = 0
 
-        random.seed(id(self))
+        seed = hash((self.start_time, self.x, Hit._counter))
+        rng = random.Random(seed)
+        Hit._counter += 1
 
         self.particles = [
             HitParticle(
-                pos_rotation=random.random() * (math.pi * 2),
-                distance=random.uniform(
+                pos_rotation=rng.random() * (math.pi * 2),
+                distance=rng.uniform(
                     PARTICLE_DISTANCE[0], PARTICLE_DISTANCE[1]),
                 start_time=self.start_time + i * PARTICLE_TIME_OFFSET
             ) for i in range(PARTICLE_NUM)
