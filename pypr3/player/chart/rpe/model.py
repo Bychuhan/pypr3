@@ -76,7 +76,8 @@ class Beat(tuple[int, int, int]):
     def __new__(cls, measure: int, beat: int, tick: int):
         return super().__new__(cls, (measure, beat, tick))
 
-    def get_value(self):
+    @property
+    def value(self):
         return self[0] + self[1] / self[2]
 
     @classmethod
