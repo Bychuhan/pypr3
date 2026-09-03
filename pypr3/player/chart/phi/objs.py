@@ -3,16 +3,12 @@ from dataclasses import dataclass
 from typing import Any
 
 
-import moderngl as mgl
-
-
-from pypr3.audio.registry import SoundRegistry
 from pypr3.player.chart import Chart
 from pypr3.player.chart.hit import Hit, HIT_GRID_SIZE, HIT_SIZE
 from pypr3.player.chart.phi.model import *
 from pypr3.renderer import Renderer, TextureRegistry
-from pypr3.audio import DirectSound
 from pypr3.utils import rotate_translate
+from pypr3.player.chart.note import NoteRenderable
 
 
 LINE_WIDTH = 5.76
@@ -23,7 +19,6 @@ SPEED_HEIGHT = 0.6
 NOTE_X = 0.05625
 NOTE_COVER_FP = -1e-3
 NOTE_MAX_VISIBLE_FP = 2
-NOTE_TEXTURE_WIDTH = 0.123
 
 
 def convert_time(time: float, bpm: float) -> float:
@@ -261,8 +256,8 @@ class Line:
         )
 
 
-class Note:
-    _HITSOUND_MAP = {
+class Note(NoteRenderable):
+    _HITSOUND_MAP: dict[NoteType, str] = {
         NoteType.TAP: "hitsound.tap",
         NoteType.DRAG: "hitsound.drag",
         NoteType.HOLD: "hitsound.hold",
@@ -284,9 +279,11 @@ class Note:
     }
 
     def __init__(self, line: Line, data: NoteModel, is_above: bool) -> None:
+        super().__init__()
+
         self.line = line
 
-        self.type = data.type
+        self.type: NoteType = data.type
         self.time = convert_time(data.time, self.line.bpm)
         self.x_pos = data.positionX * NOTE_X
         self.hold_time = convert_time(data.holdTime, self.line.bpm)
@@ -318,53 +315,9 @@ class Note:
             self.length = 0
             self.end_time = 0
 
-        # Set by Chart after multihit detection
-        self.hitsound: DirectSound | None = None
-        self.textures: list[mgl.Texture | None] = []
-        self._texture_sizes: list[tuple[float, float]] = []
-        self.is_highlight: bool = False
-
         self.should_spawn_hit: bool = False
         self.hit_time: float = 0
         self.hold_next_spawn_hit_time = self.time + 30 / self.line.bpm
-
-    def init_assets(self) -> None:
-        self.hitsound = SoundRegistry.get(
-            self._HITSOUND_MAP.get(self.type, "none"))
-
-        self._init_textures()
-
-    def _init_textures(self) -> None:
-        normal_keys = self._NORMAL_TEXTURE_MAP.get(
-            self.type, ("none",) * 3)
-        highlight_keys = self._HIGHLIGHT_TEXTURE_MAP.get(
-            self.type, ("none",) * 3)
-
-        textures: list[mgl.Texture | None] = []
-        texture_sizes: list[tuple[float, float]] = []
-
-        for normal_key, highlight_key in zip(normal_keys, highlight_keys):
-            normal_tex = TextureRegistry.get(normal_key)
-            highlight_tex = TextureRegistry.get(highlight_key)
-
-            if self.is_highlight and highlight_tex:
-                tex = highlight_tex
-                w_scale = highlight_tex.width / normal_tex.width if normal_tex else 1.0
-                tex_w = NOTE_TEXTURE_WIDTH * w_scale
-            else:
-                tex = normal_tex
-                tex_w = NOTE_TEXTURE_WIDTH
-
-            textures.append(tex)
-            texture_sizes.append(self._calc_texture_size(tex, tex_w))
-
-        self.textures = textures
-        self._texture_sizes = texture_sizes
-
-    def _calc_texture_size(self, tex: mgl.Texture | None, width: float) -> tuple[float, float]:
-        if tex is None:
-            return (1, 1)
-        return (width, width / (tex.width / tex.height))
 
     def _get_is_visible(self):
         if self.type == NoteType.HOLD:
@@ -426,55 +379,30 @@ class Note:
         if self.type == NoteType.HOLD:
             self._render_hold(renderer, screen_size, x, y)
         else:
-            self._render_texture(renderer, screen_size, 0, x, y)
+            self._render_texture(renderer, screen_size, 0,
+                                 x, y, rotation=self.line.rotation)
 
     def _render_hold(self, renderer: Renderer, screen_size: tuple[int, int], x: float, y: float) -> None:
         w, h = screen_size
 
         # Head
         if not self.is_hited:
-            if not self._render_texture(renderer, screen_size, 0, x, y, h_scale=self.hold_direction, anchor=(0.5, 1)):
+            if not self._render_texture(renderer, screen_size, 0, x, y,
+                                        h_scale=self.hold_direction, rotation=self.line.rotation, anchor=(0.5, 1)):
                 return
 
         # Body
         tex_w, _ = self._texture_sizes[1]
         if not self._render_texture(renderer, screen_size, 1, x, y,
-                                    w_scale=1, h_scale=self.length * h, anchor=(0.5, 0),
-                                    size_override=(round(tex_w * w), 1)):
+                                    w_scale=1, h_scale=self.length * h, rotation=self.line.rotation,
+                                    anchor=(0.5, 0), size_override=(round(tex_w * w), 1)):
             return
 
         # Tail
         end_x, end_y = rotate_translate(
             x, y, self.line.rotation, 0, self.length * h)
-        self._render_texture(renderer, screen_size, 2,
-                             end_x, end_y, h_scale=self.hold_direction, anchor=(0.5, 0))
-
-    def _render_texture(self, renderer: Renderer, screen_size: tuple[int, int], index: int,
-                        x: float, y: float, w_scale: float = 1.0, h_scale: float = 1.0,
-                        anchor: tuple[float, float] = (0.5, 0.5), size_override: tuple[int, int] | None = None) -> bool:
-        texture = self.textures[index]
-        if texture is None:
-            return False
-
-        if size_override is None:
-            tex_w, tex_h = self._texture_sizes[index]
-            w, _ = screen_size
-            texture_size = (round(tex_w * w), round(tex_h * w))
-        else:
-            texture_size = size_override
-
-        renderer.render_texture(
-            screen_size,
-            texture=texture,
-            x=x,
-            y=y,
-            w_scale=w_scale,
-            h_scale=h_scale,
-            rotation=self.line.rotation,
-            anchor=anchor,
-            texture_size=texture_size
-        )
-        return True
+        self._render_texture(renderer, screen_size, 2, end_x, end_y,
+                             h_scale=self.hold_direction, rotation=self.line.rotation, anchor=(0.5, 0))
 
 
 class PhiChart(Chart):
