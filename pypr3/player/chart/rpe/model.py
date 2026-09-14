@@ -235,7 +235,7 @@ class JudgeLineModel(BaseModel):
     yControl: list[YControlModel] = []
     alphaControl: list[AlphaControlModel] = []
     bpmfactor: float = 1
-    rotateWithFather: bool = True
+    rotateWithFather: bool = False
 
 
 class TimeTagModel(BaseModel):
