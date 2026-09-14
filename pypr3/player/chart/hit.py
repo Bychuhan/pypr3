@@ -96,7 +96,7 @@ class Hit:
         self.now_time = (time - self.start_time)
 
         if self.now_time < 0:
-            return False
+            return True
 
         if (self.now_time >= self.duration):
             return True
