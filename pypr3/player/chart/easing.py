@@ -127,6 +127,9 @@ def in_out_bounce(t: float) -> float:
 
 
 def clamp_ease(ease_func: Callable[[float], float], left: float, right: float) -> Callable[[float], float]:
+    if left == 0 and right == 1:
+        return ease_func
+
     a = ease_func(left)
     b = ease_func(right)
     return lambda t: (ease_func(left + (right - left) * t) - a) / (b - a)
