@@ -112,6 +112,7 @@ class Event:
     def get_progress(self, time: float) -> float:
         if self.start_time == self.end_time:
             return 1
+
         return (time - self.start_time) / (self.end_time - self.start_time)
 
     def get_is_end(self, time: float) -> bool:
