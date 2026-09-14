@@ -20,36 +20,42 @@ class HitRenderer:
     def _init_shaders(self):
         vs, fs, _ = self._resource_manager.get_shader("hit")
 
-        self._hit_shader = Shader(
-            ctx=self._ctx,
-            vertex_shader=vs,
-            fragment_shader=fs,
-            vertices=None,
-            vertex_format="2f 2f 2f 4f 1f",
-            attributes=["in_pos", "in_texCoord",
-                        "position", "in_color", "in_frame"],
-            indices=None,
-            vbo_reserve=4096 * (2 + 2 + 2 + 4 + 1) * 4,
-            vbo_dynamic=True,
-            ibo_reserve=4096 * 6,
-            ibo_dynamic=True
-        )
+        self._hit_shader: None | Shader = None
+
+        if vs and fs:
+            self._hit_shader = Shader(
+                ctx=self._ctx,
+                vertex_shader=vs,
+                fragment_shader=fs,
+                vertices=None,
+                vertex_format="2f 2f 2f 4f 1f",
+                attributes=["in_pos", "in_texCoord",
+                            "position", "in_color", "in_frame"],
+                indices=None,
+                vbo_reserve=4096 * (2 + 2 + 2 + 4 + 1) * 4,
+                vbo_dynamic=True,
+                ibo_reserve=4096 * 6,
+                ibo_dynamic=True
+            )
 
         vs, fs, _ = self._resource_manager.get_shader("particle")
 
-        self._particle_shader = Shader(
-            ctx=self._ctx,
-            vertex_shader=vs,
-            fragment_shader=fs,
-            vertices=None,
-            vertex_format="2f 2f 1f 4f",
-            attributes=["in_pos", "position", "size", "in_color"],
-            indices=None,
-            vbo_reserve=4096 * (2 + 2 + 1 + 4) * 4,
-            vbo_dynamic=True,
-            ibo_reserve=4096 * 6,
-            ibo_dynamic=True
-        )
+        self._particle_shader: None | Shader = None
+
+        if vs and fs:
+            self._particle_shader = Shader(
+                ctx=self._ctx,
+                vertex_shader=vs,
+                fragment_shader=fs,
+                vertices=None,
+                vertex_format="2f 2f 1f 4f",
+                attributes=["in_pos", "position", "size", "in_color"],
+                indices=None,
+                vbo_reserve=4096 * (2 + 2 + 1 + 4) * 4,
+                vbo_dynamic=True,
+                ibo_reserve=4096 * 6,
+                ibo_dynamic=True
+            )
 
     def clear(self):
         self._hit_verticles.clear()
@@ -90,6 +96,9 @@ class HitRenderer:
         if not self._hit_verticles:
             return
 
+        if not self._hit_shader:
+            return
+
         self._hit_shader.write_vbo(self._hit_verticles)
         self._hit_shader.write_ibo(self._hit_indices)
 
@@ -105,6 +114,9 @@ class HitRenderer:
 
     def render_particles(self, screen_size: tuple[int, int]):
         if not self._particle_verticles:
+            return
+
+        if not self._particle_shader:
             return
 
         self._particle_shader.write_vbo(self._particle_verticles)

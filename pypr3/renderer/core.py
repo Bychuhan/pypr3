@@ -25,43 +25,49 @@ class Renderer:
     def _init_shaders(self):
         vs, fs, _ = self._resource_manager.get_shader("rect")
 
-        self._rect_shader = Shader(
-            ctx=self.ctx,
-            vertex_shader=vs,
-            fragment_shader=fs,
-            vertices=[
-                -1.0, -1.0,
-                1.0, -1.0,
-                1.0,  1.0,
-                -1.0,  1.0
-            ],
-            vertex_format="2f",
-            attributes=["in_pos"],
-            indices=[
-                0, 1, 2,
-                0, 3, 2
-            ]
-        )
+        self._rect_shader: None | Shader = None
+
+        if vs and fs:
+            self._rect_shader = Shader(
+                ctx=self.ctx,
+                vertex_shader=vs,
+                fragment_shader=fs,
+                vertices=[
+                    -1.0, -1.0,
+                    1.0, -1.0,
+                    1.0,  1.0,
+                    -1.0,  1.0
+                ],
+                vertex_format="2f",
+                attributes=["in_pos"],
+                indices=[
+                    0, 1, 2,
+                    0, 3, 2
+                ]
+            )
 
         vs, fs, _ = self._resource_manager.get_shader("texture")
 
-        self._texture_shader = Shader(
-            ctx=self.ctx,
-            vertex_shader=vs,
-            fragment_shader=fs,
-            vertices=[
-                -1.0, -1.0, 0.0, 0.0,
-                1.0, -1.0, 1.0, 0.0,
-                1.0, 1.0, 1.0, 1.0,
-                -1.0, 1.0, 0.0, 1.0
-            ],
-            vertex_format="2f 2f",
-            attributes=["in_pos", "in_texCoord"],
-            indices=[
-                0, 1, 2,
-                0, 3, 2
-            ]
-        )
+        self._texture_shader: None | Shader = None
+
+        if vs and fs:
+            self._texture_shader = Shader(
+                ctx=self.ctx,
+                vertex_shader=vs,
+                fragment_shader=fs,
+                vertices=[
+                    -1.0, -1.0, 0.0, 0.0,
+                    1.0, -1.0, 1.0, 0.0,
+                    1.0, 1.0, 1.0, 1.0,
+                    -1.0, 1.0, 0.0, 1.0
+                ],
+                vertex_format="2f 2f",
+                attributes=["in_pos", "in_texCoord"],
+                indices=[
+                    0, 1, 2,
+                    0, 3, 2
+                ]
+            )
 
     def set_blend(self, enable: bool):
         if enable:
@@ -75,6 +81,9 @@ class Renderer:
     def render_rect(self, screen_size: tuple[int, int], x: float, y: float, width: float, height: float,
                     rotation: float, anchor: tuple[float, float] = (0.5, 0.5),
                     color: tuple[float, float, float, float] = (1, 1, 1, 1)):
+        if not self._rect_shader:
+            return
+
         self._rect_shader.set_uniform("screenSize", screen_size)
         self._rect_shader.set_uniform("position", (x, y))
         self._rect_shader.set_uniform("size", (width, height))
@@ -87,6 +96,9 @@ class Renderer:
     def render_texture(self, screen_size: tuple[int, int], texture: mgl.Texture, x: float, y: float,
                        w_scale: float, h_scale: float, rotation: float, anchor: tuple[float, float] = (0.5, 0.5),
                        color: tuple[float, float, float, float] = (1, 1, 1, 1), texture_size: tuple[int, int] | None = None):
+        if not self._texture_shader:
+            return
+
         self._texture_shader.set_uniform("screenSize", screen_size)
         self._texture_shader.set_uniform(
             "textureSize", texture_size or (texture.width, texture.height))
