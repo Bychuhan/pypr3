@@ -430,7 +430,7 @@ class PhiChart(Chart):
 
                 note.init_assets()
 
-    def update(self, time: float):
+    def update(self, time: float, screen_size: tuple[int, int]):
         chart_time = time - self.offset
 
         for line in self.lines:
