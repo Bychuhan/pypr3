@@ -18,7 +18,18 @@ class NoteType(IntEnum):
 
 
 class EventType(IntEnum):
-    TODO = 0
+    MOVEX = 0
+    MOVEY = 1
+    ROTATE = 2
+    ALPHA = 3
+    SPEED = 4
+    SCALEX = 5
+    SCALEY = 6
+    COLOR = 7
+    TEXT = 8
+    PAINT = 9
+    GIF = 10
+    INCLINE = 11
 
 
 class EaseType(IntEnum):
