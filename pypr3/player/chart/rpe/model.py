@@ -1,4 +1,4 @@
-from enum import IntEnum
+from enum import IntEnum, StrEnum
 from typing import Any
 
 
@@ -68,15 +68,15 @@ class EaseType(IntEnum):
         return cls.LINEAR
 
 
-class AttachUIId(IntEnum):
-    NONE = 0
-    PAUSE = 1
-    COMBONUMBER = 2
-    COMBO = 3
-    SCORE = 4
-    BAR = 5
-    NAME = 6
-    LEVEL = 7
+class AttachUIId(StrEnum):
+    NONE = "none"
+    PAUSE = "pause"
+    COMBONUMBER = "combonumber"
+    COMBO = "combo"
+    SCORE = "score"
+    BAR = "bar"
+    NAME = "name"
+    LEVEL = "level"
 
     @classmethod
     def _missing_(cls, value: object) -> "AttachUIId":
