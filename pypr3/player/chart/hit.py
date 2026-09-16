@@ -65,8 +65,9 @@ class HitParticle:
 class Hit:
     _counter = 0
 
-    def __init__(self, x: float, start_time: float, line_x: float, line_y: float, line_r: float,):
+    def __init__(self, x: float, start_time: float, line_x: float, line_y: float, line_r: float, y: float = 0):
         self.x = x
+        self.y = y
         self.start_time = start_time
 
         self.line_x = line_x
@@ -114,7 +115,7 @@ class Hit:
 
         x, y = rotate_translate(
             self.line_x * w, self.line_y * h, self.line_r,
-            self.x * w, 0
+            self.x * w, self.y * h
         )
 
         for particle in self.particles:
