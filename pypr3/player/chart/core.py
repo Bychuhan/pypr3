@@ -18,3 +18,6 @@ class Chart(ABC):
     @abstractmethod
     def from_any(cls, data: Any) -> "Chart":
         pass
+
+    def get_texture_assets(self) -> list[tuple[str, str]]:
+        return []
