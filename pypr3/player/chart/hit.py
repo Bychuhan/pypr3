@@ -31,13 +31,15 @@ def particle_alpha(t: float): return 1 - t
 
 
 class HitParticle:
-    def __init__(self, pos_rotation: float, distance: float, start_time: float) -> None:
+    def __init__(self, pos_rotation: float, distance: float, start_time: float, color: tuple[float, float, float] = HIT_COLOR) -> None:
         self.max_distance = distance
         self.x_distance = math.cos(pos_rotation)
         self.y_distance = math.sin(pos_rotation)
 
         self.start_time = start_time
         self.now_time = 0
+
+        self.color = color
 
     def update(self, time: float):
         self.now_time = time - self.start_time
@@ -58,17 +60,19 @@ class HitParticle:
 
             renderer.hit_renderer.add_particle(
                 x=x, y=y,
-                color=(*HIT_COLOR, alpha), size=size
+                color=(*self.color, alpha), size=size
             )
 
 
 class Hit:
     _counter = 0
 
-    def __init__(self, x: float, start_time: float, line_x: float, line_y: float, line_r: float, y: float = 0):
+    def __init__(self, x: float, start_time: float, line_x: float, line_y: float, line_r: float, y: float = 0,
+                 color: tuple[float, float, float] = HIT_COLOR):
         self.x = x
         self.y = y
         self.start_time = start_time
+        self.color = color
 
         self.line_x = line_x
         self.line_y = line_y
@@ -86,7 +90,8 @@ class Hit:
                 pos_rotation=rng.random() * (math.pi * 2),
                 distance=rng.uniform(
                     PARTICLE_DISTANCE[0], PARTICLE_DISTANCE[1]),
-                start_time=self.start_time + i * PARTICLE_TIME_OFFSET
+                start_time=self.start_time + i * PARTICLE_TIME_OFFSET,
+                color=self.color
             ) for i in range(PARTICLE_NUM)
         ]
 
@@ -124,7 +129,7 @@ class Hit:
         if 0 <= self.frame <= HIT_FRAME_COUNT - 1:
             progress = self.now_time / HIT_DURATION
             alpha = 1 - (progress * (1 - HIT_ALPHA))
-            color = (*HIT_COLOR, alpha)
+            color = (*self.color, alpha)
 
             renderer.hit_renderer.add_hit(
                 x=x, y=y,
