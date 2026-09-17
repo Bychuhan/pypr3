@@ -408,7 +408,8 @@ class Line:
                 if note.should_spawn_hit:
                     self.hits.append(Hit(
                         x=note.x_pos, y=note.hit_y, start_time=note.hit_time,
-                        line_x=self.x, line_y=self.y, line_r=self.rotation
+                        line_x=self.x, line_y=self.y, line_r=self.rotation,
+                        color=note.hit_color
                     ))
 
                 if note.base_fp * note.base_speed > 2:  # TODO
@@ -425,7 +426,8 @@ class Line:
                 if note.should_spawn_hit:
                     self.hits.append(Hit(
                         x=note.x_pos, y=note.hit_y, start_time=note.hit_time,
-                        line_x=self.x, line_y=self.y, line_r=self.rotation
+                        line_x=self.x, line_y=self.y, line_r=self.rotation,
+                        color=note.hit_color
                     ))
 
                 if note.base_fp * note.base_speed > 2:  # TODO
@@ -638,11 +640,10 @@ class Note(NoteRenderable):
             data.tint[2] / 255,
             data.alpha / 255,
         )
-        self.hit_color: tuple[float, float, float, float] = (
+        self.hit_color: tuple[float, float, float] = (
             data.tintHitEffects[0] / 255,
             data.tintHitEffects[1] / 255,
             data.tintHitEffects[2] / 255,
-            1,
         )
 
         self.should_spawn_hit: bool = False
