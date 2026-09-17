@@ -187,7 +187,7 @@ class NoteModel(BaseModel):
     hitsound: str | None = None
     judgeArea: float = 1
     tint: tuple[int, int, int] = Field((255, 255, 255), alias="color")
-    tintHitEffects: tuple[int, int, int] = (255, 255, 255)
+    tintHitEffects: tuple[int, int, int] = (255, 236, 160)
 
 
 class ControlModel(BaseModel):
