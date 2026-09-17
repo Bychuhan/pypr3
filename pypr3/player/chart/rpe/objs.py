@@ -360,6 +360,10 @@ class Line:
         self.father_line: Line | None = None
         self.rotate_with_father: bool = data.rotateWithFather
 
+        self.texture_file = data.Texture
+        self.has_texture = self.texture_file != "line.png"
+        self.texture_name = f"line.custom.{self.texture_file}" if self.has_texture else "none"
+
         self.anchor = data.anchor
         self.z_order = data.zOrder
 
@@ -539,16 +543,34 @@ class Line:
         if self.attach_ui_id != AttachUIId.NONE:
             return
 
-        renderer.render_rect(
-            screen_size=screen_size,
-            x=self.x * w,
-            y=self.y * h,
-            width=LINE_WIDTH * w * self.x_scale,
-            height=LINE_HEIGHT * h * self.y_scale,
-            rotation=self.rotation,
-            anchor=self.anchor,
-            color=(*self.color, self.alpha)
-        )
+        if self.has_texture:
+            texture = TextureRegistry.get(self.texture_name)
+            texture_scale = h / RPE_SCREEN_HEIGHT
+
+            if texture:
+                renderer.render_texture(
+                    screen_size=screen_size,
+                    texture=texture,
+                    x=self.x * w,
+                    y=self.y * h,
+                    w_scale=texture_scale * self.x_scale,
+                    h_scale=texture_scale * self.y_scale,
+                    rotation=self.rotation,
+                    anchor=self.anchor,
+                    color=(*self.color, self.alpha)
+                )
+
+        else:
+            renderer.render_rect(
+                screen_size=screen_size,
+                x=self.x * w,
+                y=self.y * h,
+                width=LINE_WIDTH * w * self.x_scale,
+                height=LINE_HEIGHT * h * self.y_scale,
+                rotation=self.rotation,
+                anchor=self.anchor,
+                color=(*self.color, self.alpha)
+            )
 
 
 class Note(NoteRenderable):
@@ -801,3 +823,13 @@ class RpeChart(Chart):
             return cls(data=RpeChartModel.model_validate(data))
         else:
             raise TypeError(f"Expected dict, got {type(data).__name__}")
+
+    def get_texture_assets(self) -> list[tuple[str, str]]:
+        textures: list[tuple[str, str]] = []
+        for line in self.lines:
+            if line.has_texture:
+                textures.append(
+                    (line.texture_name, line.texture_file)
+                )
+
+        return list(dict.fromkeys(textures))
