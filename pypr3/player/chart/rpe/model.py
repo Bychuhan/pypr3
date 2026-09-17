@@ -2,7 +2,7 @@ from enum import IntEnum, StrEnum
 from typing import Any
 
 
-from pydantic import BaseModel, ValidationInfo, GetCoreSchemaHandler, Field
+from pydantic import BaseModel, ValidationInfo, GetCoreSchemaHandler, AliasChoices, Field
 from pydantic_core.core_schema import with_info_plain_validator_function
 
 
@@ -186,7 +186,8 @@ class NoteModel(BaseModel):
     yOffset: float = 0
     hitsound: str | None = None
     judgeArea: float = 1
-    tint: tuple[int, int, int] = Field((255, 255, 255), alias="color")
+    tint: tuple[int, int, int] = Field(
+        (255, 255, 255), validation_alias=AliasChoices("tint", "color"))
     tintHitEffects: tuple[int, int, int] = (255, 236, 160)
 
 
