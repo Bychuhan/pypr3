@@ -661,8 +661,8 @@ class Note(NoteRenderable):
         return False
 
     def render(self, renderer: Renderer, screen_size: tuple[int, int]) -> None:
-        cover_fp = (self.base_end_fp * self.base_speed if self.type == NoteType.HOLD
-                    else self.base_fp * self.base_speed)
+        cover_fp = (self.base_end_fp if self.type == NoteType.HOLD
+                    else self.base_fp)
         if (self.line.is_cover and cover_fp < NOTE_COVER_FP and not self.is_hited):
             return
         if self.base_fp * self.base_speed > 2:  # TODO
