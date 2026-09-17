@@ -19,13 +19,16 @@ class SimPhiChartInfo(BaseModel):
     Image: str | None = None
     Name: str = "Unknown"
     Artist: str = Field(
-        "Unknown", validation_alias=AliasChoices("Composer", "Musician"))
+        "Unknown", validation_alias=AliasChoices("Artist", "Composer", "Musician"))
     Level: str = "Unknown"
     Illustrator: str = "Unknown"
-    Charter: str = Field("Unknown", validation_alias="Designer")  # Legacy
+    Charter: str = Field("Unknown", validation_alias=AliasChoices(
+        "Charter", "Designer"))
     AspectRatio: float = 16 / 9
-    NoteScale: float = Field(1, validation_alias="ScaleRatio")  # Legacy
-    BackgroundDim: float = Field(0.6, validation_alias="GlobalAlpha")  # Legacy
+    NoteScale: float = Field(1, validation_alias=AliasChoices(
+        "NoteScale", "ScaleRatio"))
+    BackgroundDim: float = Field(0.6, validation_alias=AliasChoices(
+        "BackgroundDim", "GlobalAlpha"))
 
 
 class SimPhiChartInfoParser(InfoParser):
