@@ -632,8 +632,18 @@ class Note(NoteRenderable):
         self.width = data.size
         self.visible_time = self.time - data.visibleTime
         self.is_visible = False
-        self.color = data.tint
-        self.hit_color = data.tintHitEffects
+        self.color: tuple[float, float, float, float] = (
+            data.tint[0] / 255,
+            data.tint[1] / 255,
+            data.tint[2] / 255,
+            data.alpha / 255,
+        )
+        self.hit_color: tuple[float, float, float, float] = (
+            data.tintHitEffects[0] / 255,
+            data.tintHitEffects[1] / 255,
+            data.tintHitEffects[2] / 255,
+            1,
+        )
 
         self.should_spawn_hit: bool = False
         self.hit_time: float = 0
@@ -704,8 +714,8 @@ class Note(NoteRenderable):
         if self.type == NoteType.HOLD:
             self._render_hold(renderer, screen_size, x, y)
         else:
-            self._render_texture(renderer, screen_size, 0,
-                                 x, y, w_scale=self.width, rotation=self.line.rotation)
+            self._render_texture(renderer, screen_size, 0, x, y,
+                                 w_scale=self.width, color=self.color, rotation=self.line.rotation)
 
     def _render_hold(self, renderer: Renderer, screen_size: tuple[int, int], x: float, y: float) -> None:
         w, h = screen_size
@@ -715,21 +725,22 @@ class Note(NoteRenderable):
         # Head
         if not self.is_hited:
             if not self._render_texture(renderer, screen_size, 0, x, y, w_scale=self.width,
-                                        h_scale=hold_direction, rotation=self.line.rotation, anchor=(0.5, 1)):
+                                        h_scale=hold_direction, rotation=self.line.rotation,
+                                        color=self.color, anchor=(0.5, 1)):
                 return
 
         # Body
         tex_w, _ = self._texture_sizes[1]
         if not self._render_texture(renderer, screen_size, 1, x, y,
                                     w_scale=self.width, h_scale=self.length * h, rotation=self.line.rotation,
-                                    anchor=(0.5, 0), size_override=(round(tex_w * w), 1)):
+                                    color=self.color, anchor=(0.5, 0), size_override=(round(tex_w * w), 1)):
             return
 
         # Tail
         end_x, end_y = rotate_translate(
             x, y, self.line.rotation, 0, self.length * h)
         self._render_texture(renderer, screen_size, 2, end_x, end_y, w_scale=self.width,
-                             h_scale=hold_direction, rotation=self.line.rotation, anchor=(0.5, 0))
+                             color=self.color, h_scale=hold_direction, rotation=self.line.rotation, anchor=(0.5, 0))
 
 
 class RpeChart(Chart):
