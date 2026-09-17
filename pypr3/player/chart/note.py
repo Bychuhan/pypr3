@@ -69,7 +69,8 @@ class NoteRenderable(ABC):
 
     def _render_texture(self, renderer: Renderer, screen_size: tuple[int, int], index: int,
                         x: float, y: float, w_scale: float = 1.0, h_scale: float = 1.0,
-                        rotation: float = 0.0, anchor: tuple[float, float] = (0.5, 0.5), size_override: tuple[int, int] | None = None) -> bool:
+                        rotation: float = 0.0, anchor: tuple[float, float] = (0.5, 0.5),
+                        color: tuple[float, float, float, float] = (1, 1, 1, 1), size_override: tuple[int, int] | None = None) -> bool:
         texture = self.textures[index]
         if texture is None:
             return False
@@ -90,6 +91,7 @@ class NoteRenderable(ABC):
             h_scale=h_scale,
             rotation=rotation,
             anchor=anchor,
+            color=color,
             texture_size=texture_size
         )
         return True
