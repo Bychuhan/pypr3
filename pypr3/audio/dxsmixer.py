@@ -4,10 +4,12 @@
 
 from __future__ import annotations
 
-from typing import Literal
-import time
 
-from . import dxsound
+import time
+from typing import Literal
+
+
+from pypr3.audio.dxsound import DirectSound
 
 
 class MusicCls:
@@ -40,7 +42,7 @@ class MusicCls:
         self.buffer.SetCurrentPosition(min(max(minv, v), maxv))
 
     def load(self, fp: str | bytes):
-        new_dxs = dxsound.DirectSound(fp, enable_cache=False)
+        new_dxs = DirectSound(fp, enable_cache=False)
         self.unload()
         self.dxs = new_dxs
 

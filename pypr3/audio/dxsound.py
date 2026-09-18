@@ -4,17 +4,20 @@
 
 from __future__ import annotations
 
+
 import wave
 import subprocess
 import math
-import typing
 import warnings
+from typing import Literal
 from io import BytesIO
+
 
 import win32comext.directsound.directsound as ds
 import win32event as w32e
 import numpy as np
 from pywintypes import WAVEFORMATEX
+
 
 CACHE_BUFFER_MAXSIZE = 32
 PRE_CACHE_SIZE = CACHE_BUFFER_MAXSIZE
@@ -119,7 +122,7 @@ class DirectSound:
         buffer.SetVolume(self._volume)
         return event, buffer
 
-    def create(self, playMethod: typing.Literal[0, 1]):
+    def create(self, playMethod: Literal[0, 1]):
         if self._enable_cache:
             if len(self._buffers) > CACHE_BUFFER_MAXSIZE:
                 for i in reversed(self._buffers):
@@ -163,7 +166,7 @@ class DirectSound:
     def set_volume(self, v: float):
         self._volume = self.transform_volume(v)
 
-    def play(self, wait: bool = False, playMethod: typing.Literal[0, 1] = 0):
+    def play(self, wait: bool = False, playMethod: Literal[0, 1] = 0):
         event, buffer = self.create(playMethod)
 
         if wait:

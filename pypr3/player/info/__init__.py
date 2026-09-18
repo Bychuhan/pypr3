@@ -1,7 +1,7 @@
-from pypr3.player.info.rpe import RPEChartInfo, RPEChartInfoParser
-from pypr3.player.info.phira import PhiraChartInfo, PhiraChartInfoParser
-from pypr3.player.info.simphi import SimPhiChartInfo, SimPhiChartInfoParser
-from pypr3.player.info.core import ChartInfo
+from .rpe import RPEChartInfo, RPEChartInfoParser
+from .phira import PhiraChartInfo, PhiraChartInfoParser
+from .simphi import SimPhiChartInfo, SimPhiChartInfoParser
+from .core import ChartInfo
 
 
 __all__ = [

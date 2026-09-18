@@ -1,4 +1,4 @@
-from pypr3.audio import DirectSound
+from pypr3.audio.dxsound import DirectSound
 
 
 class SoundRegistry:

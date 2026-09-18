@@ -48,7 +48,8 @@ class Window:
 
         if self._multisample > 0:
             pygame.display.gl_set_attribute(pygame.GL_MULTISAMPLEBUFFERS, 1)
-            pygame.display.gl_set_attribute(pygame.GL_MULTISAMPLESAMPLES, self._multisample)
+            pygame.display.gl_set_attribute(
+                pygame.GL_MULTISAMPLESAMPLES, self._multisample)
 
         self._set_mode()
         self._set_caption()
