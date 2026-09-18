@@ -125,7 +125,8 @@ class Player:
 
                     break
             else:
-                raise FileNotFoundError(f"No 'info' file found in archive: {fp}")
+                raise FileNotFoundError(
+                    f"No 'info' file found in archive: {fp}")
 
             if self.info.chart:
                 with pez.open(self.info.chart) as f:
@@ -133,13 +134,15 @@ class Player:
 
                 self._load_chart_assets(pez, self.chart.get_texture_assets())
             else:
-                raise ValueError(f"Chart file not specified in info: {self.info}")
+                raise ValueError(
+                    f"Chart file not specified in info: {self.info}")
 
             if self.info.music:
                 with pez.open(self.info.music) as f:
                     self.load_music(f.read())
             else:
-                raise ValueError(f"Music file not specified in info: {self.info}")
+                raise ValueError(
+                    f"Music file not specified in info: {self.info}")
 
             if self.info.illustration:
                 with pez.open(self.info.illustration) as f:

@@ -5,10 +5,10 @@ from typing import Any
 
 from pypr3.player.chart import Chart
 from pypr3.player.chart.hit import Hit, HIT_GRID_SIZE, HIT_SIZE
+from pypr3.player.chart.note import NoteRenderable
 from pypr3.player.chart.phi.model import *
 from pypr3.renderer import Renderer, TextureRegistry
 from pypr3.utils import rotate_translate
-from pypr3.player.chart.note import NoteRenderable
 
 
 LINE_WIDTH = 5.76
