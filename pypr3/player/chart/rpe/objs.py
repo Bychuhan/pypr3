@@ -721,12 +721,10 @@ class Note(NoteRenderable):
     def _render_hold(self, renderer: Renderer, screen_size: tuple[int, int], x: float, y: float) -> None:
         w, h = screen_size
 
-        hold_direction = 1 if self.length >= 0 else -1
-
         # Head
         if not self.is_hited:
             if not self._render_texture(renderer, screen_size, 0, x, y, w_scale=self.width,
-                                        h_scale=hold_direction, rotation=self.line.rotation,
+                                        h_scale=self.direction, rotation=self.line.rotation,
                                         color=self.color, anchor=(0.5, 1)):
                 return
 
@@ -741,7 +739,7 @@ class Note(NoteRenderable):
         end_x, end_y = rotate_translate(
             x, y, self.line.rotation, 0, self.length * h)
         self._render_texture(renderer, screen_size, 2, end_x, end_y, w_scale=self.width,
-                             color=self.color, h_scale=hold_direction, rotation=self.line.rotation, anchor=(0.5, 0))
+                             color=self.color, h_scale=self.direction, rotation=self.line.rotation, anchor=(0.5, 0))
 
 
 class RpeChart(Chart):
