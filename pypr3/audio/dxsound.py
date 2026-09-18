@@ -4,6 +4,8 @@
 
 from __future__ import annotations
 
+import wave
+import subprocess
 import math
 import typing
 import warnings
@@ -11,9 +13,8 @@ from io import BytesIO
 
 import win32comext.directsound.directsound as ds
 import win32event as w32e
-from pywintypes import WAVEFORMATEX
-import soundfile as sf
 import numpy as np
+from pywintypes import WAVEFORMATEX
 
 CACHE_BUFFER_MAXSIZE = 32
 PRE_CACHE_SIZE = CACHE_BUFFER_MAXSIZE
@@ -23,35 +24,66 @@ dxs = ds.DirectSoundCreate(None, None)
 dxs.SetCooperativeLevel(None, ds.DSSCL_NORMAL)
 
 
+def _decode_audio_with_ffmpeg(data: bytes) -> tuple[np.ndarray, int, int]:
+    cmd = [
+        "ffmpeg",
+        "-i", "pipe:0",
+        "-f", "wav",
+        "-acodec", "pcm_s16le",
+        "pipe:1",
+    ]
+
+    proc = subprocess.Popen(
+        cmd,
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+
+    stdout, stderr = proc.communicate(data)
+
+    if proc.returncode != 0:
+        raise RuntimeError(
+            f"ffmpeg failed (code {proc.returncode}): {stderr.decode('utf-8', errors='ignore')}"
+        )
+
+    with wave.open(BytesIO(stdout), "rb") as wf:
+        channels = wf.getnchannels()
+        samplerate = wf.getframerate()
+        n_frames = wf.getnframes()
+        raw = wf.readframes(n_frames)
+
+    samples = np.frombuffer(raw, dtype=np.int16).astype(np.float32) / 32768.0
+    samples = samples.reshape(-1, channels)
+
+    return samples, samplerate, channels
+
+
 def _loadDirectSound(data: bytes):
     sdesc = ds.DSBUFFERDESC()
 
-    with BytesIO(data) as bio:
-        audio_data, samplerate = sf.read(bio, dtype="float32")
+    audio_data, samplerate, nchannels = _decode_audio_with_ffmpeg(data)
 
-        audio_data = np.clip(audio_data, -1, 1)
-        audio_data = (audio_data * 32767).astype(np.int16)
+    audio_data = np.clip(audio_data, -1, 1)
+    audio_data = (audio_data * 32767).astype(np.int16)
 
-        bufdata = audio_data.tobytes()
+    bufdata = audio_data.tobytes()
 
-        wfx = WAVEFORMATEX()
-        wfx.wFormatTag = 1
+    wfx = WAVEFORMATEX()
+    wfx.wFormatTag = 1
+    wfx.nChannels = nchannels
+    wfx.nSamplesPerSec = samplerate
+    wfx.nAvgBytesPerSec = samplerate * nchannels * 2
+    wfx.nBlockAlign = nchannels * 2
+    wfx.wBitsPerSample = 16
 
-        if audio_data.ndim == 1:
-            nchannels = 1
-        else:
-            nchannels = audio_data.shape[1]
-
-        wfx.nChannels = nchannels
-        wfx.nSamplesPerSec = samplerate
-        wfx.nAvgBytesPerSec = samplerate * nchannels * 2
-        wfx.nBlockAlign = nchannels * 2
-        wfx.wBitsPerSample = 16
-
-        sdesc.lpwfxFormat = wfx
+    sdesc.lpwfxFormat = wfx
 
     if len(bufdata) > ds.DSBSIZE_MAX:
-        warnings.warn(f"Sound buffer size is too large ({len(bufdata)} > {ds.DSBSIZE_MAX}), truncated.", RuntimeWarning)
+        warnings.warn(
+            f"Sound buffer size is too large ({len(bufdata)} > {ds.DSBSIZE_MAX}), truncated.",
+            RuntimeWarning
+        )
         bufdata = bufdata[:ds.DSBSIZE_MAX]
 
     sdesc.dwBufferBytes = len(bufdata)
