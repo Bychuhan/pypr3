@@ -12,7 +12,7 @@ class ResourceManager:
             with open(path, "rb") as f:
                 return f.read()
         except FileNotFoundError:
-            return None\
+            return None
 
     def get_texture(self, file: str) -> bytes | None:
         path = self.root / "textures" / file
