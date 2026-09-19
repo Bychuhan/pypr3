@@ -7,7 +7,7 @@ from pypr3.player.chart import Chart
 from pypr3.player.chart.hit import Hit, HIT_GRID_SIZE, HIT_SIZE
 from pypr3.player.chart.rpe.model import *
 from pypr3.player.chart.rpe.easing import EASE_FUNCTIONS
-from pypr3.player.chart.easing import clamp_ease
+from pypr3.player.chart.easing import clamp_ease, CubicBezier
 from pypr3.player.chart.note import NoteRenderable
 from pypr3.utils import rotate_translate
 from pypr3.renderer import Renderer, TextureRegistry
@@ -87,7 +87,10 @@ def convert_event_value(value: Any, event_type: "EventType") -> Any:
 
 
 def get_ease(event: NormalEventModel | ColorEventModel | TextEventModel) -> Callable[[float], float]:
-    return clamp_ease(EASE_FUNCTIONS[event.easingType], event.easingLeft, event.easingRight)
+    if event.bezier == 1:
+        return CubicBezier(*event.bezierPoints)
+    else:
+        return clamp_ease(EASE_FUNCTIONS[event.easingType], event.easingLeft, event.easingRight)
 
 
 def init_events(events: list[NormalEventModel] | list[ColorEventModel] | list[TextEventModel], bpm_list: deque["BpmEvent"], event_type: "EventType"):
