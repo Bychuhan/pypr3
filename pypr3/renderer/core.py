@@ -5,6 +5,7 @@ from pypr3.core import ResourceManager
 from pypr3.renderer import Shader
 from pypr3.renderer.hit import HitRenderer
 from pypr3.renderer.text import TextRenderer, TextTexture
+from pypr3.utils import rotate_translate
 
 
 class Renderer:
@@ -95,16 +96,22 @@ class Renderer:
 
         self._rect_shader.render(mgl.TRIANGLES)
 
-    def render_texture(self, screen_size: tuple[int, int], texture: mgl.Texture, x: float, y: float,
+    def render_texture(self, screen_size: tuple[int, int], texture: mgl.Texture | TextTexture, x: float, y: float,
                        w_scale: float, h_scale: float, rotation: float, anchor: tuple[float, float] = (0.5, 0.5),
                        color: tuple[float, float, float, float] = (1, 1, 1, 1), texture_size: tuple[int, int] | None = None):
         if not self._texture_shader:
             return
 
+        x_pos, y_pos = x, y
+        if isinstance(texture, TextTexture):
+            y_offset = -texture.y_offset * h_scale * (1 - anchor[1])
+
+            x_pos, y_pos = rotate_translate(x_pos, y_pos, rotation, 0, y_offset)
+
         self._texture_shader.set_uniform("screenSize", screen_size)
         self._texture_shader.set_uniform(
             "textureSize", texture_size or (texture.width, texture.height))
-        self._texture_shader.set_uniform("position", (x, y))
+        self._texture_shader.set_uniform("position", (x_pos, y_pos))
         self._texture_shader.set_uniform("scale", (w_scale, h_scale))
         self._texture_shader.set_uniform("rotation", rotation)
         self._texture_shader.set_uniform("anchor", anchor)
