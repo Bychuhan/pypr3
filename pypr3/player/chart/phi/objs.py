@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from typing import Any
 
 
+from pypr3.audio import SoundRegistry
 from pypr3.player.chart import Chart
 from pypr3.player.chart.hit import Hit, HIT_GRID_SIZE, HIT_SIZE
 from pypr3.player.chart.note import NoteRenderable
@@ -320,6 +321,8 @@ class Note(NoteRenderable):
         self.hit_time: float = 0
         self.hold_next_spawn_hit_time = self.time + 30 / self.line.bpm
 
+        self.hitsound_name = self._HITSOUND_MAP.get(self.type, "none")
+
     def _get_is_visible(self):
         if self.type == NoteType.HOLD:
             return self.hold_time != 0 and self.hold_speed != 0
@@ -336,8 +339,9 @@ class Note(NoteRenderable):
             if not self.is_hited:
                 self.is_hited = True
 
-                if self.hitsound:
-                    self.hitsound.play()
+                hitsound = SoundRegistry.get(self.hitsound_name)
+                if hitsound:
+                    hitsound.play()
 
                 self.should_spawn_hit = True
                 self.hit_time = self.time
@@ -428,7 +432,7 @@ class PhiChart(Chart):
             for note in notes:
                 note.is_highlight = len(notes) > 1
 
-                note.init_assets()
+                note.init_textures()
 
     def update(self, time: float, screen_size: tuple[int, int]):
         chart_time = time - self.offset

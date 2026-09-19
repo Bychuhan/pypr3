@@ -11,6 +11,7 @@ from pypr3.player.chart.easing import clamp_ease, CubicBezier
 from pypr3.player.chart.note import NoteRenderable
 from pypr3.utils import rotate_translate
 from pypr3.renderer import Renderer, TextureRegistry
+from pypr3.audio import SoundRegistry
 
 
 RPE_SCREEN_WIDTH = 1350
@@ -657,6 +658,11 @@ class Note(NoteRenderable):
         self.hold_next_spawn_hit_time = self.time + 0.15  # TODO
         self.hit_y = self.y_offset * self.speed
 
+        self.has_custom_hitsound = not data.hitsound is None
+        self.hitsound_file = data.hitsound if not data.hitsound is None else "none"
+        self.hitsound_name = (f"hitsound.custom.{self.hitsound_file}" if self.has_custom_hitsound else
+                              self._HITSOUND_MAP.get(self.type, "none"))
+
     def update(self, time: float) -> bool:
         self.should_spawn_hit = False
 
@@ -675,8 +681,9 @@ class Note(NoteRenderable):
                 self.is_hited = True
 
                 if self.is_real:
-                    if self.hitsound:
-                        self.hitsound.play()
+                    hitsound = SoundRegistry.get(self.hitsound_name)
+                    if hitsound:
+                        hitsound.play()
 
                     self.should_spawn_hit = True
                     self.hit_time = self.time
@@ -787,7 +794,7 @@ class RpeChart(Chart):
             for note in notes:
                 note.is_highlight = len(notes) > 1
 
-                note.init_assets()
+                note.init_textures()
 
     def update(self, time: float, screen_size: tuple[int, int]):
         chart_time = time - self.offset
