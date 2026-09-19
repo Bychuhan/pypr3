@@ -133,3 +133,48 @@ def clamp_ease(ease_func: Callable[[float], float], left: float, right: float) -
     a = ease_func(left)
     b = ease_func(right)
     return lambda t: (ease_func(left + (right - left) * t) - a) / (b - a)
+
+
+class CubicBezier:
+    def __init__(self, x1: float, y1: float, x2: float, y2: float, resolution: int = 64):
+        self.x1, self.y1 = x1, y1
+        self.x2, self.y2 = x2, y2
+        self.resolution = resolution
+        self._build_table()
+
+    def _build_table(self):
+        self._xs: list[float] = []
+        self._ys: list[float] = []
+        for i in range(self.resolution + 1):
+            t = i / self.resolution
+            self._xs.append(self._bezier_x(t))
+            self._ys.append(self._bezier_y(t))
+
+    def _bezier_x(self, t: float) -> float:
+        return 3 * (1 - t) ** 2 * t * self.x1 + 3 * (1 - t) * t ** 2 * self.x2 + t ** 3
+
+    def _bezier_y(self, t: float) -> float:
+        return 3 * (1 - t) ** 2 * t * self.y1 + 3 * (1 - t) * t ** 2 * self.y2 + t ** 3
+
+    def __call__(self, x: float) -> float:
+        if x <= 0:
+            return 0.0
+        if x >= 1:
+            return 1.0
+
+        lo, hi = 0, self.resolution
+        while lo < hi:
+            mid = (lo + hi) // 2
+            if self._xs[mid] < x:
+                lo = mid + 1
+            else:
+                hi = mid
+
+        i = max(0, lo - 1)
+        x0, x1 = self._xs[i], self._xs[i + 1]
+        y0, y1 = self._ys[i], self._ys[i + 1]
+
+        if x1 == x0:
+            return y0
+
+        return y0 + (y1 - y0) * (x - x0) / (x1 - x0)
