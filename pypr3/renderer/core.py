@@ -4,6 +4,7 @@ import moderngl as mgl
 from pypr3.core import ResourceManager
 from pypr3.renderer import Shader
 from pypr3.renderer.hit import HitRenderer
+from pypr3.renderer.text import TextRenderer, TextTexture
 
 
 class Renderer:
@@ -21,6 +22,7 @@ class Renderer:
         self._init_shaders()
 
         self.hit_renderer = HitRenderer(self.ctx, self._resource_manager)
+        self.text_renderer = TextRenderer(self.ctx)
 
     def _init_shaders(self):
         vs, fs, _ = self._resource_manager.get_shader("rect")
