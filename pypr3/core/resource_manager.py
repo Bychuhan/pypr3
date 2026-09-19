@@ -37,6 +37,9 @@ class ResourceManager:
 
         return vs_path, fs_path, gs_path
 
+    def get_font_path(self, file: str) -> str:
+        return str(self.root / "fonts" / file)
+
     def get_texture(self, file: str) -> bytes | None:
         path = self.get_texture_path(file)
 
@@ -74,3 +77,12 @@ class ResourceManager:
                 gs = f.read()
 
         return vs, fs, gs
+
+    def get_font(self, file: str) -> bytes | None:
+        path = self.get_font_path(file)
+
+        try:
+            with open(path, "rb") as f:
+                return f.read()
+        except FileNotFoundError:
+            return None
