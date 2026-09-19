@@ -17,6 +17,16 @@ class ChartFormat(IntEnum):
     Pgr = auto()
     Pbc = auto()
 
+    @classmethod
+    def _missing_(cls, value: object) -> "ChartFormat | None":
+        if isinstance(value, str):
+            name = value.lower()
+            for member in cls:
+                if member.name.lower() == name:
+                    return member
+
+        return None
+
 
 class PhiraChartInfo(BaseModel):
     """
