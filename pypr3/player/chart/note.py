@@ -5,9 +5,7 @@ from abc import ABC, abstractmethod
 import moderngl as mgl
 
 
-from pypr3.audio.registry import SoundRegistry
 from pypr3.renderer import Renderer, TextureRegistry
-from pypr3.audio import DirectSound
 
 
 NOTE_TEXTURE_WIDTH = 0.123
@@ -20,18 +18,11 @@ class NoteRenderable(ABC):
 
     def __init__(self) -> None:
         self.type: Any = None
-        self.hitsound: DirectSound | None = None
         self.textures: list[mgl.Texture | None] = []
         self._texture_sizes: list[tuple[float, float]] = []
         self.is_highlight: bool = False
 
-    def init_assets(self) -> None:
-        self.hitsound = SoundRegistry.get(
-            self._HITSOUND_MAP.get(self.type, "none"))
-
-        self._init_textures()
-
-    def _init_textures(self) -> None:
+    def init_textures(self) -> None:
         normal_keys = self._NORMAL_TEXTURE_MAP.get(
             self.type, ("none",) * 3)
         highlight_keys = self._HIGHLIGHT_TEXTURE_MAP.get(
