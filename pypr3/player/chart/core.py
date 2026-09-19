@@ -21,3 +21,9 @@ class Chart(ABC):
 
     def get_texture_assets(self) -> list[tuple[str, str]]:
         return []
+
+    def get_sound_assets(self) -> list[tuple[str, str]]:
+        return []
+
+    def get_font_assets(self) -> list[tuple[str, str]]:
+        return []
