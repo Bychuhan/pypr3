@@ -856,3 +856,15 @@ class RpeChart(Chart):
                 )
 
         return list(dict.fromkeys(textures))
+
+    def get_sound_assets(self) -> list[tuple[str, str]]:
+        sounds: list[tuple[str, str]] = []
+        for line in self.lines:
+            for group in line.notes + line.holds:
+                for note in group:
+                    if note.has_custom_hitsound:
+                        sounds.append(
+                            (note.hitsound_name, note.hitsound_file)
+                        )
+
+        return list(dict.fromkeys(sounds))
