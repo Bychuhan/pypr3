@@ -17,6 +17,7 @@ from pypr3.renderer import Renderer, TextureConverter, TextureRegistry
 
 
 BG_DIM_COLOR = (0, 0, 0, 0.55)
+FONT_SIZE = 75
 
 
 class Player:
@@ -32,6 +33,12 @@ class Player:
     def init_assets(self):
         self._init_hitsounds()
         self._init_textures()
+
+        self._renderer.text_renderer.load_font(
+            name="default",
+            path=self._resource_manager.get_font_path("font.ttf"),
+            size=FONT_SIZE
+        )
 
     def _init_hitsounds(self):
         for name in ("tap", "drag", "hold", "flick"):
