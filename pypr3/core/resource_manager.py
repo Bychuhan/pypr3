@@ -1,9 +1,15 @@
+from typing import IO
 from pathlib import Path
 
 
 class ResourceManager:
     def __init__(self, root: str | Path) -> None:
         self.root = Path(root)
+
+    def open(self, file: str, mode: str = "rb") -> IO[bytes]:
+        path = self.root / file
+
+        return open(path, mode)
 
     def get_file(self, file: str) -> bytes | None:
         path = self.root / file
