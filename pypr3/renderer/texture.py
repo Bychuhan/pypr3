@@ -13,6 +13,11 @@ class TextureConverter:
             return TextureConverter.from_image(ctx, image)
 
     @staticmethod
+    def from_bytes_with_wh(ctx: mgl.Context, mode: str, size: tuple[int, int], data: bytes) -> mgl.Texture:
+        with Image.frombytes(mode, size, data) as image:
+            return TextureConverter.from_image(ctx, image)
+
+    @staticmethod
     def from_bytes(ctx: mgl.Context, data: bytes) -> mgl.Texture:
         with Image.open(BytesIO(data)) as image:
             return TextureConverter.from_image(ctx, image)
