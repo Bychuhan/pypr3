@@ -1,3 +1,4 @@
+import re
 from dataclasses import dataclass, field
 from typing import Any, Callable
 from collections import deque
@@ -11,6 +12,7 @@ from pypr3.player.chart.easing import clamp_ease, CubicBezier
 from pypr3.player.chart.note import NoteRenderable
 from pypr3.utils import rotate_translate
 from pypr3.renderer import Renderer, TextureRegistry
+from pypr3.renderer.text import TextTexture
 from pypr3.audio import SoundRegistry
 
 
@@ -21,6 +23,10 @@ SPEED_HEIGHT = 120 / RPE_SCREEN_HEIGHT
 LINE_WIDTH = 4000 / RPE_SCREEN_WIDTH
 LINE_HEIGHT = 5 / RPE_SCREEN_HEIGHT
 LINE_DEFAULT_COLOR = (1, 1, 1)
+
+DEFAULT_FONT_NAME = "default"
+RPE_DEFAULT_FONT_FILES = ("cmdysj", "cmdysj.ttf")
+RPE_FONT_SIZE = 48
 
 NOTE_Z_ORDER = 1000
 NOTE_COVER_FP = -1e-3
@@ -82,7 +88,7 @@ def convert_event_value(value: Any, event_type: "EventType") -> Any:
     if event_type == EventType.COLOR:
         return tuple([i / 255 for i in value])
     elif event_type == EventType.TEXT:
-        return value  # TODO
+        return value
     else:
         return convert_normal_event_value(value, event_type)
 
@@ -98,16 +104,29 @@ def init_events(events: list[NormalEventModel] | list[ColorEventModel] | list[Te
     match event_type:
         case EventType.COLOR:
             event_object = ColorEvent
+        case EventType.TEXT:
+            event_object = TextEvent
         case _:
             event_object = Event
 
-    return deque([event_object(
-        start_time=convert_time(event.startTime, bpm_list),
-        end_time=convert_time(event.endTime, bpm_list),
-        start=convert_event_value(event.start, event_type),
-        end=convert_event_value(event.end, event_type),
-        ease_func=get_ease(event)
-    ) for event in sorted(events, key=lambda x: x.startTime.value)])
+    result: list[Any] = []
+    for event in sorted(events, key=lambda x: x.startTime.value):
+        kwargs: dict[str, Any] = {
+            "start_time": convert_time(event.startTime, bpm_list),
+            "end_time": convert_time(event.endTime, bpm_list),
+            "start": convert_event_value(event.start, event_type),
+            "end": convert_event_value(event.end, event_type),
+            "ease_func": get_ease(event),
+        }
+
+        if isinstance(event, TextEventModel):
+            if event.font not in RPE_DEFAULT_FONT_FILES:
+                kwargs["font_name"] = f"custom.{event.font}"
+                kwargs["font_file"] = event.font
+
+        result.append(event_object(**kwargs))
+
+    return deque(result)
 
 
 def init_speed_events(events: list[NormalEventModel], bpm_list: deque["BpmEvent"]) -> deque["SpeedEvent"]:
@@ -207,6 +226,7 @@ class Event:
             ease_progress = self.ease_func(progress)
         except OverflowError:
             ease_progress = 0
+
         return (self.start + (self.end - self.start) * ease_progress).real
 
     def get_is_start(self, time: float) -> bool:
@@ -229,14 +249,127 @@ class ColorEvent(Event):
                         (self.end_time - self.start_time))
             progress = min(progress, 1.0)
 
-        r = self.start[0] + (self.end[0] - self.start[0]
-                             ) * self.ease_func(progress)
-        g = self.start[1] + (self.end[1] - self.start[1]
-                             ) * self.ease_func(progress)
-        b = self.start[2] + (self.end[2] - self.start[2]
-                             ) * self.ease_func(progress)
+        try:
+            ease_progress = self.ease_func(progress)
+        except OverflowError:
+            ease_progress = 0
+
+        r = self.start[0] + (self.end[0] - self.start[0]) * ease_progress
+        g = self.start[1] + (self.end[1] - self.start[1]) * ease_progress
+        b = self.start[2] + (self.end[2] - self.start[2]) * ease_progress
 
         return (r.real, g.real, b.real)
+
+
+def extract_leading_number(s: str) -> float | None:
+    match = re.match(r"^[-+]?(\d+\.?\d*|\.\d+)([eE][-+]?\d+)?", s)
+    if match:
+        return float(match.group())
+
+    return None
+
+
+@dataclass
+class TextEvent(Event):
+    start: str
+    end: str
+    font_name: str = DEFAULT_FONT_NAME
+    font_file: str = "none"
+    _texts: list[str] = field(default_factory=lambda: [])
+    _is_number: bool = False
+    _is_int: bool = False
+    _start_number: float = 0
+    _end_number: float = 0
+
+    def __post_init__(self):
+        self._texts = []
+
+        if self.start == self.end:
+            return
+
+        is_number = "%P%" in self.start and "%P%" in self.end
+
+        if is_number:
+            self.start = self.start.replace("%P%", "")
+            self.end = self.end.replace("%P%", "")
+
+            self._is_number = True
+
+            self._start_number = extract_leading_number(
+                self.start) or self.end_time
+            self._end_number = extract_leading_number(self.end) or 0
+
+            self._is_int = self._start_number.is_integer() and self._end_number.is_integer()
+
+            return
+
+        if self.start.startswith(self.end):
+            start_text = self.end
+            end_text = self.start
+            reverse = True
+        elif self.end.startswith(self.start):
+            start_text = self.start
+            end_text = self.end
+            reverse = False
+        else:
+            self.start = self.start.replace("%P%", "")
+            self.end = self.end.replace("%P%", "")
+
+            return
+
+        change_text = end_text[len(start_text):]
+
+        if len(change_text) <= 1:
+            return
+
+        for _ in range(len(change_text[0].encode("utf-8", "replace"))):
+            self._texts.append(start_text)
+
+        text = start_text
+        for index, char in enumerate(change_text):
+            text += char
+
+            if index < len(change_text) - 1:
+                next_char = change_text[index + 1]
+
+                for _ in range(len(next_char.encode("utf-8", "replace"))):
+                    self._texts.append(text)
+
+        self._texts.append(end_text)
+
+        if reverse:
+            self._texts = self._texts[::-1]
+
+    def get_value(self, time: float) -> str:
+        if time < self.start_time:
+            return ""
+
+        if time >= self.end_time:
+            return self.end
+
+        if self._texts or self._is_number:
+            if self.start_time == self.end_time:
+                progress = 1.0
+            else:
+                progress = ((time - self.start_time) /
+                            (self.end_time - self.start_time))
+
+            try:
+                ease_progress = self.ease_func(progress)
+            except OverflowError:
+                ease_progress = 0
+
+            if self._is_number:
+                number = self._start_number + \
+                    (self._end_number - self._start_number) * ease_progress
+
+                return str(int(number) if self._is_int else round(number, 3))
+            else:
+                ease_progress = max(min(ease_progress, 1), 0)
+
+                return self._texts[int(ease_progress * (len(self._texts) - 1))]
+
+        return self.start
 
 
 @dataclass
@@ -346,6 +479,8 @@ class Line:
                                for layer in [data.extended.scaleYEvents] if layer]
         self.color_events = [init_events(layer, self.bpm_list, EventType.COLOR)
                              for layer in [data.extended.colorEvents] if layer]
+        self.text_events: list[deque[TextEvent]] = [init_events(layer, self.bpm_list, EventType.TEXT)
+                            for layer in [data.extended.textEvents] if layer]
 
         self.notes = init_notes(
             self, [note for note in data.notes if note.type != NoteType.HOLD])
@@ -362,6 +497,11 @@ class Line:
         self.x_scale: float = 1
         self.y_scale: float = 1
         self.color: tuple[float, float, float] = LINE_DEFAULT_COLOR
+
+        self.is_text = bool(self.text_events)
+        self.text: str | None = ""
+        self.text_texture: TextTexture | None = None
+        self.font_name = DEFAULT_FONT_NAME
 
         self.father_index: int = data.father
         self.father_line: Line | None = None
@@ -384,7 +524,7 @@ class Line:
         if self.father_index != -1:
             self.father_line = lines[self.father_index]
 
-    def _update_events(self, time: float, event_layers: list[deque[Event]] | list[deque[ColorEvent]] | list[deque[SpeedEvent]], default_value: Any = 0) -> Any:
+    def _update_events(self, time: float, event_layers: list[deque[Event]] | list[deque[ColorEvent]] | list[deque[SpeedEvent]] | list[deque[TextEvent]], default_value: Any = 0) -> Any:
         value = default_value
 
         for events in event_layers:
@@ -392,15 +532,17 @@ class Line:
                 events.popleft()
 
             if events:
-                if isinstance(events[0], SpeedEvent):
-                    value += events[0].get_fp(time)
-                elif isinstance(events[0], ColorEvent):
+                if isinstance(events[0], ColorEvent):
                     event_value = events[0].get_value(time)
-                    value = (
+                    value: Any = (
                         value[0] + event_value[0],
                         value[1] + event_value[1],
                         value[2] + event_value[2],
                     )
+                elif isinstance(events[0], SpeedEvent):
+                    value += events[0].get_fp(time)
+                elif isinstance(events[0], TextEvent):
+                    value += events[0].get_value(time)
                 else:
                     value += events[0].get_value(time)
 
@@ -536,6 +678,9 @@ class Line:
         if self.color_events:
             self.color = self._update_events(
                 time, self.color_events, (0, 0, 0))
+        if self.text_events:
+            self.text = self._update_events(time, self.text_events, "")
+            self.font_name = self.text_events[0][0].font_name
 
         self._update_notes(time)
 
@@ -548,6 +693,34 @@ class Line:
             return
 
         w, h = screen_size
+
+        if self.is_text and not self.text is None:
+            need_rerender = self.text_texture is None or self.text != self.text_texture.text
+            if need_rerender:
+                if not self.text_texture is None:
+                    self.text_texture.texture.release()
+
+                self.text_texture = renderer.text_renderer.render_text(
+                    self.text, self.font_name
+                )
+
+            if self.text_texture and self.text:
+                text_scale = (
+                    (RPE_FONT_SIZE / self.text_texture.font_size) * h / RPE_SCREEN_HEIGHT)
+
+                renderer.render_texture(
+                    screen_size=screen_size,
+                    texture=self.text_texture,
+                    x=self.x * w,
+                    y=self.y * h,
+                    w_scale=text_scale * self.x_scale,
+                    h_scale=text_scale * self.y_scale,
+                    rotation=self.rotation,
+                    anchor=self.anchor,
+                    color=(*self.color, self.alpha)
+                )
+
+            return
 
         if self.attach_ui_id != AttachUIId.NONE:
             return
@@ -868,3 +1041,15 @@ class RpeChart(Chart):
                         )
 
         return list(dict.fromkeys(sounds))
+
+    def get_font_assets(self) -> list[tuple[str, str]]:
+        fonts: list[tuple[str, str]] = []
+        for line in self.lines:
+            for layer in line.text_events:
+                for event in layer:
+                    if event.font_name != DEFAULT_FONT_NAME:
+                        fonts.append(
+                            (event.font_name, event.font_file)
+                        )
+
+        return list(dict.fromkeys(fonts))
