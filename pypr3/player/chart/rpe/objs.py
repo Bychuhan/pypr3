@@ -86,6 +86,10 @@ def convert_event_value(value: Any, event_type: "EventType") -> Any:
         return convert_normal_event_value(value, event_type)
 
 
+def get_ease(event: NormalEventModel | ColorEventModel | TextEventModel) -> Callable[[float], float]:
+    return clamp_ease(EASE_FUNCTIONS[event.easingType], event.easingLeft, event.easingRight)
+
+
 def init_events(events: list[NormalEventModel] | list[ColorEventModel] | list[TextEventModel], bpm_list: deque["BpmEvent"], event_type: "EventType"):
     match event_type:
         case EventType.COLOR:
@@ -98,8 +102,7 @@ def init_events(events: list[NormalEventModel] | list[ColorEventModel] | list[Te
         end_time=convert_time(event.endTime, bpm_list),
         start=convert_event_value(event.start, event_type),
         end=convert_event_value(event.end, event_type),
-        ease_func=clamp_ease(
-            EASE_FUNCTIONS[event.easingType], event.easingLeft, event.easingRight)
+        ease_func=get_ease(event)
     ) for event in sorted(events, key=lambda x: x.startTime.value)])
 
 
