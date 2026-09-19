@@ -3,6 +3,7 @@ from pathlib import Path
 from io import TextIOWrapper
 from typing import IO
 from zipfile import ZipFile
+from io import BytesIO
 
 
 import moderngl as mgl
@@ -69,19 +70,37 @@ class Player:
                 TextureRegistry.register(texture_name, TextureConverter.from_bytes(
                     self._renderer.ctx, texture))
 
-    def _load_chart_assets(self, chart: str | Path | ZipFile, textures: list[tuple[str, str]]):
+    def _load_chart_assets(
+        self,
+        chart: str | Path | ZipFile,
+        textures: list[tuple[str, str]],
+        sounds: list[tuple[str, str]],
+        fonts: list[tuple[str, str]]
+    ):
         if isinstance(chart, (str, Path)):
             chart_dir = Path(chart).parent
 
             chart_resource_manager = ResourceManager(chart_dir)
 
             for texture_name, file_name in textures:
-                texture = chart_resource_manager.get_file(file_name)
+                texture = chart_resource_manager.get_file_path(file_name)
 
                 if texture:
-                    TextureRegistry.register(texture_name, TextureConverter.from_bytes(
+                    TextureRegistry.register(texture_name, TextureConverter.from_file(
                         self._renderer.ctx, texture))
 
+            for sound_name, file_name in sounds:
+                sound = chart_resource_manager.get_file_path(file_name)
+
+                if sound:
+                    SoundRegistry.register(sound_name, DirectSound(sound))
+
+            for font_name, file_name in fonts:
+                self._renderer.text_renderer.load_font(
+                    name=font_name,
+                    path=chart_resource_manager.get_file_path(file_name),
+                    size=FONT_SIZE
+                )
         else:
             for texture_name, file_name in textures:
                 with chart.open(file_name) as f:
@@ -91,6 +110,21 @@ class Player:
                         TextureRegistry.register(texture_name, TextureConverter.from_bytes(
                             self._renderer.ctx, texture))
 
+            for sound_name, file_name in sounds:
+                with chart.open(file_name) as f:
+                    sound = f.read()
+
+                    if sound:
+                        SoundRegistry.register(sound_name, DirectSound(sound))
+
+            for font_name, file_name in fonts:
+                with chart.open(file_name) as f:
+                    self._renderer.text_renderer.load_font(
+                        name=font_name,
+                        path=BytesIO(f.read()),
+                        size=FONT_SIZE
+                    )
+
     def load_info(self, fp: str | Path):
         self.info = ChartInfo.from_file(fp)
 
@@ -98,7 +132,12 @@ class Player:
         with open(fp, "r", encoding="utf-8") as f:
             self.chart = ChartParser.from_dict(json.load(f))
 
-        self._load_chart_assets(fp, self.chart.get_texture_assets())
+        self._load_chart_assets(
+            fp,
+            self.chart.get_texture_assets(),
+            self.chart.get_sound_assets(),
+            self.chart.get_font_assets()
+        )
 
     def load_music(self, fp: str | Path | bytes):
         if isinstance(fp, (str, Path)):
@@ -139,7 +178,12 @@ class Player:
                 with pez.open(self.info.chart) as f:
                     self.chart = ChartParser.from_dict(json.load(f))
 
-                self._load_chart_assets(pez, self.chart.get_texture_assets())
+                self._load_chart_assets(
+                    pez,
+                    self.chart.get_texture_assets(),
+                    self.chart.get_sound_assets(),
+                    self.chart.get_font_assets()
+                )
             else:
                 raise ValueError(
                     f"Chart file not specified in info: {self.info}")
