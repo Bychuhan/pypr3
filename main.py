@@ -7,8 +7,10 @@ from tkinter.filedialog import askopenfilename
 
 
 import pygame
+from loguru import logger
 
 
+import pypr3
 from pypr3.core import Window, ResourceManager
 from pypr3.player import Player
 from pypr3.renderer import Renderer
@@ -27,7 +29,11 @@ def resource_path(relative_path: str) -> str:
 
 
 def main() -> None:
+    logger.info(f"pypr3 {pypr3.__version__}")
+
     resource_manager = ResourceManager(resource_path("resources"))
+
+    logger.debug(f"Resource root: {resource_manager.root}")
 
     window = Window(970, 600, "pypr3", resizable=True)
     window.create()
@@ -57,6 +63,8 @@ def main() -> None:
     frame_count = 0
     fps_timer = time.time()
 
+    logger.info("Starting playback")
+
     st = time.time()
     player.play_music()
 
@@ -85,7 +93,7 @@ def main() -> None:
 
         frame_count += 1
         if time.time() - fps_timer >= 1.0:
-            print(f"FPS: {frame_count}")
+            logger.debug(f"FPS: {frame_count}")
             frame_count = 0
             fps_timer = time.time()
 

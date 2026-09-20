@@ -33,6 +33,9 @@ class Window:
         return flags
 
     def _set_mode(self):
+        logger.debug(
+            f"Setting display mode: {self._width}x{self._height}, flags={self._get_flags()}, vsync={self._vsync.name}")
+
         pygame.display.set_mode(
             size=(self._width, self._height),
             flags=self._get_flags(),
@@ -47,6 +50,8 @@ class Window:
             raise RuntimeError("Window has already been created")
 
         if self._multisample > 0:
+            logger.debug(f"Enabling MSAA {self._multisample}x")
+
             pygame.display.gl_set_attribute(pygame.GL_MULTISAMPLEBUFFERS, 1)
             pygame.display.gl_set_attribute(
                 pygame.GL_MULTISAMPLESAMPLES, self._multisample)
@@ -62,6 +67,9 @@ class Window:
     def handle_events(self, events: list[pygame.Event]):
         for event in events:
             if event.type == pygame.WINDOWRESIZED:
+                logger.debug(
+                    f"Window resized: {self._width}x{self._height} -> {event.x}x{event.y}")
+
                 self._width = event.x
                 self._height = event.y
 

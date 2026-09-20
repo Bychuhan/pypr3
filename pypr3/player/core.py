@@ -1,4 +1,5 @@
 import json
+import os
 from pathlib import Path
 from io import TextIOWrapper
 from typing import IO
@@ -8,6 +9,7 @@ from io import BytesIO
 
 import moderngl as mgl
 from PIL import Image, ImageFilter
+from loguru import logger
 
 
 from pypr3.core import ResourceManager
@@ -32,6 +34,8 @@ class Player:
         self._renderer = renderer
 
     def init_assets(self):
+        logger.info("Initializing player assets")
+
         self._init_hitsounds()
         self._init_textures()
 
@@ -41,12 +45,17 @@ class Player:
             size=FONT_SIZE
         )
 
+        logger.info("Player assets initialized")
+
     def _init_hitsounds(self):
         for name in ("tap", "drag", "hold", "flick"):
             sound = (self._resource_manager.get_sound(f"{name}.ogg"))
 
             if sound:
                 SoundRegistry.register(f"hitsound.{name}", DirectSound(sound))
+                logger.debug(f"Registered hitsound: {name}")
+            else:
+                logger.warning(f"Hitsound not found: {name}.ogg")
 
     def _init_textures(self):
         for texture_name, file_name in (
@@ -69,6 +78,9 @@ class Player:
             if texture:
                 TextureRegistry.register(texture_name, TextureConverter.from_bytes(
                     self._renderer.ctx, texture))
+                logger.debug(f"Registered texture: {texture_name}")
+            else:
+                logger.warning(f"Texture not found: {file_name}")
 
     def _load_chart_assets(
         self,
@@ -88,19 +100,31 @@ class Player:
                 if texture:
                     TextureRegistry.register(texture_name, TextureConverter.from_file(
                         self._renderer.ctx, texture))
+                    logger.debug(f"Registered texture: {texture_name}")
+                else:
+                    logger.warning(f"Texture not found: {file_name}")
 
             for sound_name, file_name in sounds:
                 sound = chart_resource_manager.get_file_path(file_name)
 
                 if sound:
                     SoundRegistry.register(sound_name, DirectSound(sound))
+                    logger.debug(f"Registered sound: {sound_name}")
+                else:
+                    logger.warning(f"Sound not found: {file_name}")
 
             for font_name, file_name in fonts:
-                self._renderer.text_renderer.load_font(
-                    name=font_name,
-                    path=chart_resource_manager.get_file_path(file_name),
-                    size=FONT_SIZE
-                )
+                path = chart_resource_manager.get_file_path(file_name)
+
+                if os.path.exists(path):
+                    self._renderer.text_renderer.load_font(
+                        name=font_name,
+                        path=path,
+                        size=FONT_SIZE
+                    )
+                    logger.debug(f"Loaded font: {font_name}")
+                else:
+                    logger.warning(f"font not found: {file_name}")
         else:
             for texture_name, file_name in textures:
                 with chart.open(file_name) as f:
@@ -109,6 +133,9 @@ class Player:
                     if texture:
                         TextureRegistry.register(texture_name, TextureConverter.from_bytes(
                             self._renderer.ctx, texture))
+                        logger.debug(f"Registered texture: {texture_name}")
+                    else:
+                        logger.warning(f"Texture not found: {file_name}")
 
             for sound_name, file_name in sounds:
                 with chart.open(file_name) as f:
@@ -116,21 +143,36 @@ class Player:
 
                     if sound:
                         SoundRegistry.register(sound_name, DirectSound(sound))
+                        logger.debug(f"Registered sound: {sound_name}")
+                    else:
+                        logger.warning(f"Sound not found: {file_name}")
 
             for font_name, file_name in fonts:
-                with chart.open(file_name) as f:
-                    self._renderer.text_renderer.load_font(
-                        name=font_name,
-                        path=BytesIO(f.read()),
-                        size=FONT_SIZE
-                    )
+                try:
+                    with chart.open(file_name) as f:
+                        self._renderer.text_renderer.load_font(
+                            name=font_name,
+                            path=BytesIO(f.read()),
+                            size=FONT_SIZE
+                        )
+                    logger.debug(f"Loaded font: {font_name}")
+                except KeyError:
+                    logger.warning(f"font not found: {file_name}")
 
     def load_info(self, fp: str | Path):
+        logger.info(f"Loading info: {fp}")
+
         self.info = ChartInfo.from_file(fp)
 
+        logger.debug(f"Info loaded: {self.info}")
+
     def load_chart(self, fp: str | Path):
+        logger.info(f"Loading chart: {fp}")
+
         with open(fp, "r", encoding="utf-8") as f:
             self.chart = ChartParser.from_dict(json.load(f))
+
+        logger.debug("Chart parsed")
 
         self._load_chart_assets(
             fp,
@@ -139,15 +181,25 @@ class Player:
             self.chart.get_font_assets()
         )
 
+        logger.info("Chart assets loaded")
+
     def load_music(self, fp: str | Path | bytes):
         if isinstance(fp, (str, Path)):
+            logger.info(f"Loading music: {fp}")
+
             self.music.load(str(fp))
         else:
+            logger.info(f"Loading music from bytes")
+
             self.music.load(fp)
 
     def load_illustration(self, fp: str | Path | IO[bytes]):
+        logger.info("Loading illustration")
+
         if self.illustration:
             self.illustration.release()
+
+            logger.debug("Released previous illustration")
 
         with Image.open(fp) as img:
             img = img.convert("RGB")
@@ -156,18 +208,26 @@ class Player:
             self.illustration = TextureConverter.from_image(
                 self._renderer.ctx, img)
 
+        logger.debug(f"Illustration loaded, size: {self.illustration.width}x{self.illustration.height}")
+
     def load_pez(self, fp: str | Path):
+        logger.info(f"Loading PEZ: {fp}")
+
         with ZipFile(fp) as pez:
             file_names = [i.filename for i in pez.filelist]
             for file_name in file_names:
                 path = Path(file_name)
 
                 if path.stem == "info":
+                    logger.debug(f"Found info file: {file_name}")
+
                     parser = ChartInfo.get_parser(path)
 
                     with pez.open(file_name) as f:
                         self.info = ChartInfo.from_any(
                             parser.load(TextIOWrapper(f, encoding="utf-8")))
+
+                    logger.debug(f"Info loaded: {self.info}")
 
                     break
             else:
@@ -175,6 +235,8 @@ class Player:
                     f"No 'info' file found in archive: {fp}")
 
             if self.info.chart:
+                logger.debug(f"Loading chart: {self.info.chart}")
+
                 with pez.open(self.info.chart) as f:
                     self.chart = ChartParser.from_dict(json.load(f))
 
@@ -189,6 +251,8 @@ class Player:
                     f"Chart file not specified in info: {self.info}")
 
             if self.info.music:
+                logger.debug(f"Loading music: {self.info.music}")
+
                 with pez.open(self.info.music) as f:
                     self.load_music(f.read())
             else:
@@ -196,6 +260,8 @@ class Player:
                     f"Music file not specified in info: {self.info}")
 
             if self.info.illustration:
+                logger.debug(f"Loading illustration: {self.info.illustration}")
+
                 with pez.open(self.info.illustration) as f:
                     self.load_illustration(f)
             else:
