@@ -87,7 +87,7 @@ class Player:
                         file_name
                     )
                 except (FileNotFoundError, KeyError):
-                    logger.opt(colors=True).debug(
+                    logger.opt(colors=True).warning(
                         "Font file '<light-black>{}</light-black>' not found, "
                         "trying system font for '<green>{}</green>'",
                         file_name,
