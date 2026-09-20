@@ -1,3 +1,4 @@
+import warnings
 from dataclasses import dataclass, field
 from typing import Any, IO
 
@@ -37,6 +38,14 @@ class TextRenderer:
             logger.warning(f"Font '{name}' already registered, overwriting")
 
         self._fonts[name] = pygame.font.Font(path, size)
+
+    def load_system_font(self, name: str, path: str, size: int) -> None:
+        if name in self._fonts:
+            logger.warning(f"Font '{name}' already registered, overwriting")
+
+        with warnings.catch_warnings():
+            warnings.filterwarnings("error", category=UserWarning)
+            self._fonts[name] = pygame.font.SysFont(path, size)
 
     def render_text(
         self,
