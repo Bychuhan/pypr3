@@ -28,6 +28,7 @@ def resource_path(relative_path: str) -> str:
     return os.path.join(base_path, relative_path)
 
 
+@logger.catch
 def main() -> None:
     logger.info(f"pypr3 {pypr3.__version__}")
 
@@ -99,6 +100,11 @@ def main() -> None:
 
     pygame.quit()
 
+    sys.exit()
+
 
 if __name__ == "__main__":
     main()
+
+    print()
+    input("Press Enter to exit...")
