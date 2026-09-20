@@ -1,10 +1,8 @@
 import json
-import os
 from pathlib import Path
 from io import TextIOWrapper
-from typing import IO
+from typing import IO, Callable
 from zipfile import ZipFile
-from io import BytesIO
 
 
 import moderngl as mgl
@@ -117,29 +115,7 @@ class Player:
     def init_assets(self):
         logger.info("Initializing player assets")
 
-        self._init_hitsounds()
-        self._init_textures()
-
-        self._renderer.text_renderer.load_font(
-            name="default",
-            path=self._resource_manager.get_font_path("font.ttf"),
-            size=FONT_SIZE
-        )
-
-        logger.info("Player assets initialized")
-
-    def _init_hitsounds(self):
-        for name in ("tap", "drag", "hold", "flick"):
-            sound = (self._resource_manager.get_sound(f"{name}.ogg"))
-
-            if sound:
-                SoundRegistry.register(f"hitsound.{name}", DirectSound(sound))
-                logger.debug(f"Registered hitsound: {name}")
-            else:
-                logger.warning(f"Hitsound not found: {name}.ogg")
-
-    def _init_textures(self):
-        for texture_name, file_name in (
+        self._load_textures(lambda file: self._resource_manager.open(self._resource_manager.get_texture_path(file)), [
             ("note.tap", "tap.png"),
             ("note.tap.hl", "tap_hl.png"),
             ("note.drag", "drag.png"),
@@ -153,15 +129,20 @@ class Player:
             ("note.hold.tail", "hold_tail.png"),
             ("note.hold.tail.hl", "hold_tail_hl.png"),
             ("hit_fx", "hit_fx.png"),
-        ):
-            texture = self._resource_manager.get_texture(file_name)
+        ])
 
-            if texture:
-                TextureRegistry.register(texture_name, TextureConverter.from_bytes(
-                    self._renderer.ctx, texture))
-                logger.debug(f"Registered texture: {texture_name}")
-            else:
-                logger.warning(f"Texture not found: {file_name}")
+        self._load_sounds(lambda file: self._resource_manager.open(self._resource_manager.get_sound_path(file)), [
+            ("hitsound.tap", "tap.ogg"),
+            ("hitsound.drag", "drag.ogg"),
+            ("hitsound.hold", "hold.ogg"),
+            ("hitsound.flick", "flick.ogg"),
+        ])
+
+        self._load_fonts(lambda file: self._resource_manager.open(self._resource_manager.get_font_path(file)), [
+            ("default", "font.ttf"),
+        ])
+
+        logger.info("Player assets initialized")
 
     def _load_chart_assets(
         self,
@@ -175,70 +156,17 @@ class Player:
 
             chart_resource_manager = ResourceManager(chart_dir)
 
-            for texture_name, file_name in textures:
-                texture = chart_resource_manager.get_file_path(file_name)
+            self._load_textures(chart_resource_manager.open, textures)
 
-                if texture:
-                    TextureRegistry.register(texture_name, TextureConverter.from_file(
-                        self._renderer.ctx, texture))
-                    logger.debug(f"Registered texture: {texture_name}")
-                else:
-                    logger.warning(f"Texture not found: {file_name}")
+            self._load_sounds(chart_resource_manager.open, sounds)
 
-            for sound_name, file_name in sounds:
-                sound = chart_resource_manager.get_file_path(file_name)
-
-                if sound:
-                    SoundRegistry.register(sound_name, DirectSound(sound))
-                    logger.debug(f"Registered sound: {sound_name}")
-                else:
-                    logger.warning(f"Sound not found: {file_name}")
-
-            for font_name, file_name in fonts:
-                path = chart_resource_manager.get_file_path(file_name)
-
-                if os.path.exists(path):
-                    self._renderer.text_renderer.load_font(
-                        name=font_name,
-                        path=path,
-                        size=FONT_SIZE
-                    )
-                    logger.debug(f"Loaded font: {font_name}")
-                else:
-                    logger.warning(f"font not found: {file_name}")
+            self._load_fonts(chart_resource_manager.open, fonts)
         else:
-            for texture_name, file_name in textures:
-                with chart.open(file_name) as f:
-                    texture = f.read()
+            self._load_textures(chart.open, textures)
 
-                    if texture:
-                        TextureRegistry.register(texture_name, TextureConverter.from_bytes(
-                            self._renderer.ctx, texture))
-                        logger.debug(f"Registered texture: {texture_name}")
-                    else:
-                        logger.warning(f"Texture not found: {file_name}")
+            self._load_sounds(chart.open, sounds)
 
-            for sound_name, file_name in sounds:
-                with chart.open(file_name) as f:
-                    sound = f.read()
-
-                    if sound:
-                        SoundRegistry.register(sound_name, DirectSound(sound))
-                        logger.debug(f"Registered sound: {sound_name}")
-                    else:
-                        logger.warning(f"Sound not found: {file_name}")
-
-            for font_name, file_name in fonts:
-                try:
-                    with chart.open(file_name) as f:
-                        self._renderer.text_renderer.load_font(
-                            name=font_name,
-                            path=BytesIO(f.read()),
-                            size=FONT_SIZE
-                        )
-                    logger.debug(f"Loaded font: {font_name}")
-                except KeyError:
-                    logger.warning(f"font not found: {file_name}")
+            self._load_fonts(chart.open, fonts)
 
     def load_info(self, fp: str | Path):
         logger.info(f"Loading info: {fp}")
@@ -289,7 +217,8 @@ class Player:
             self.illustration = TextureConverter.from_image(
                 self._renderer.ctx, img)
 
-        logger.debug(f"Illustration loaded, size: {self.illustration.width}x{self.illustration.height}")
+        logger.debug(
+            f"Illustration loaded, size: {self.illustration.width}x{self.illustration.height}")
 
     def load_pez(self, fp: str | Path):
         logger.info(f"Loading PEZ: {fp}")
