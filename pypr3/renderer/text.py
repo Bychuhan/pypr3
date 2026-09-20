@@ -71,7 +71,8 @@ class TextRenderer:
             line_surfaces.append(line_surface)
 
         total_width = max(s.get_width() for s in line_surfaces)
-        total_height = font.get_height() * len(lines)
+        total_height = (font.get_height() * (len(lines) - 1) +
+            (line_surfaces[-1].get_height() if line_surfaces else 0))
 
         result = pygame.Surface((total_width, total_height), pygame.SRCALPHA)
 
