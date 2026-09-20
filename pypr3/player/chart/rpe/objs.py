@@ -700,9 +700,14 @@ class Line:
                 if not self.text_texture is None:
                     self.text_texture.texture.release()
 
-                self.text_texture = renderer.text_renderer.render_text(
-                    self.text, self.font_name
-                )
+                try:
+                    self.text_texture = renderer.text_renderer.render_text(
+                        self.text, self.font_name
+                    )
+                except:
+                    self.text_texture = renderer.text_renderer.render_text(
+                        self.text, DEFAULT_FONT_NAME
+                    )
 
             if self.text_texture and self.text:
                 text_scale = (
