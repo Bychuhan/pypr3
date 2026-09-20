@@ -33,6 +33,87 @@ class Player:
         self._resource_manager = resource_manager
         self._renderer = renderer
 
+    def _load_textures(self, func: Callable[[str], IO[bytes]], data: list[tuple[str, str]]):
+        for texture_name, file_name in data:
+            try:
+                with func(file_name) as f:
+                    TextureRegistry.register(texture_name, TextureConverter.from_bytes(
+                        self._renderer.ctx, f.read()))
+
+                    logger.opt(colors=True).info(
+                        "Loaded texture: '<green>{}</green>', file: '<light-black>{}</light-black>'",
+                        texture_name,
+                        file_name
+                    )
+            except Exception:
+                logger.opt(colors=True).exception(
+                    "Failed to load texture '<yellow>{}</yellow>' from '<yellow>{}</yellow>'",
+                    texture_name,
+                    file_name
+                )
+
+    def _load_sounds(self, func: Callable[[str], IO[bytes]], data: list[tuple[str, str]]):
+        for sound_name, file_name in data:
+            try:
+                with func(file_name) as f:
+                    SoundRegistry.register(sound_name, DirectSound(f.read()))
+
+                    logger.opt(colors=True).info(
+                        "Loaded sound: '<green>{}</green>', file: '<light-black>{}</light-black>'",
+                        sound_name,
+                        file_name
+                    )
+            except Exception:
+                logger.opt(colors=True).exception(
+                    "Failed to load sound '<yellow>{}</yellow>' from '<yellow>{}</yellow>'",
+                    sound_name,
+                    file_name
+                )
+
+    def _load_fonts(self, func: Callable[[str], IO[bytes]], data: list[tuple[str, str]]):
+        for font_name, file_name in data:
+            try:
+                try:
+                    # Font uses lazy loading; do NOT close the file object
+                    f = func(file_name)
+
+                    self._renderer.text_renderer.load_font(
+                        name=font_name,
+                        path=f,
+                        size=FONT_SIZE
+                    )
+
+                    logger.opt(colors=True).info(
+                        "Loaded font: '<green>{}</green>', file: '<light-black>{}</light-black>'",
+                        font_name,
+                        file_name
+                    )
+                except (FileNotFoundError, KeyError):
+                    logger.opt(colors=True).debug(
+                        "Font file '<light-black>{}</light-black>' not found, "
+                        "trying system font for '<green>{}</green>'",
+                        file_name,
+                        font_name
+                    )
+
+                    self._renderer.text_renderer.load_system_font(
+                        name=font_name,
+                        path=file_name,
+                        size=FONT_SIZE
+                    )
+
+                    logger.opt(colors=True).info(
+                        "Loaded font '<green>{}</green>' from system font",
+                        font_name,
+                        file_name
+                    )
+            except Exception:
+                logger.opt(colors=True).exception(
+                    "Failed to load font '<yellow>{}</yellow>' from '<yellow>{}</yellow>'",
+                    font_name,
+                    file_name
+                )
+
     def init_assets(self):
         logger.info("Initializing player assets")
 
