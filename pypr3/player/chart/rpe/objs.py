@@ -120,7 +120,7 @@ def init_events(events: list[NormalEventModel] | list[ColorEventModel] | list[Te
         }
 
         if isinstance(event, TextEventModel):
-            if event.font not in RPE_DEFAULT_FONT_FILES:
+            if event.font and event.font not in RPE_DEFAULT_FONT_FILES:
                 kwargs["font_name"] = f"custom.{event.font}"
                 kwargs["font_file"] = event.font
 
