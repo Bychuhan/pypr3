@@ -160,8 +160,8 @@ class BlockScaleEventModel(BaseModel):
 
 
 class BlockAreaModel(BaseModel):
-    topRightPercentage: tuple[float, float] = (0, 0)
-    bottomLeftPercentage: tuple[float, float] = (0, 0)
+    topRightPercentage: BlockEventPosition = BlockEventPosition()
+    bottomLeftPercentage: BlockEventPosition = BlockEventPosition()
     appearTime: float = 0
     enableTime: float = 0
     disableTime: float = 0
