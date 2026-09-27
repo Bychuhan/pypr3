@@ -126,13 +126,13 @@ class JudgeLineModel(BaseModel):
     judgeLineRotateEvents: list[EventModel] = []
 
 
-class BlockEventAnchor(BaseModel):
+class BlockEventPosition(BaseModel):
     x: float = 0.5
     y: float = 0.5
 
 
 class BlockRotateEventModel(BaseModel):
-    anchor: BlockEventAnchor = BlockEventAnchor()
+    anchor: BlockEventPosition = BlockEventPosition()
     time: float = 0
     easeType: EaseType = EaseType.LINEAR
     rotation: float = 0
@@ -141,7 +141,7 @@ class BlockRotateEventModel(BaseModel):
 
 
 class BlockMoveEventModel(BaseModel):
-    endPosition: BlockEventAnchor = BlockEventAnchor()
+    endPosition: BlockEventPosition = BlockEventPosition()
     time: float = 0
     easeTypeX: EaseType = EaseType.LINEAR
     easeTypeY: EaseType = EaseType.LINEAR
@@ -150,11 +150,11 @@ class BlockMoveEventModel(BaseModel):
 
 
 class BlockScaleEventModel(BaseModel):
-    anchor: BlockEventAnchor = BlockEventAnchor()
+    anchor: BlockEventPosition = BlockEventPosition()
     time: float = 0
     easeTypeX: EaseType = EaseType.LINEAR
     easeTypeY: EaseType = EaseType.LINEAR
-    scale: BlockEventAnchor = BlockEventAnchor()
+    scale: BlockEventPosition = BlockEventPosition()
 
     animationCurve: AnimationCurveModel = AnimationCurveModel()  # Unused?
 
