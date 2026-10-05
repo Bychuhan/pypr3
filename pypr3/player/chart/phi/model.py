@@ -30,18 +30,18 @@ class EventType(IntEnum):
 
 class EaseType(IntEnum):
     LINEAR = 0
-    IN_SINE = 1
-    OUT_SINE = 2
-    IN_OUT_SINE = 3
+    IN_QUAD = 1
+    OUT_QUAD = 2
+    IN_OUT_QUAD = 3
     IN_CUBIC = 4
     OUT_CUBIC = 5
     IN_OUT_CUBIC = 6
-    IN_QUINT = 7
-    OUT_QUINT = 8
-    IN_OUT_QUINT = 9
-    IN_CIRC = 10
-    OUT_CIRC = 11
-    IN_OUT_CIRC = 12
+    IN_QUART = 7
+    OUT_QUART = 8
+    IN_OUT_QUART = 9
+    IN_QUINT = 10
+    OUT_QUINT = 11
+    IN_OUT_QUINT = 12
     ZERO = 13
     ONE = 14
 
