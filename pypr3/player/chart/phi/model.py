@@ -44,52 +44,10 @@ class EaseType(IntEnum):
     IN_OUT_CIRC = 12
     ZERO = 13
     ONE = 14
-    ANIMATION_CURVE = 15  # Unused?
 
     @classmethod
     def _missing_(cls, value: object) -> "EaseType":
         return cls.LINEAR
-
-
-class WrapMode(IntEnum):
-    CONSTANT = 0
-    CLAMP = 1
-    LOOP = 2
-    PINGPONG = 4
-    DEFAULT = 8
-
-
-class RotationOrder(IntEnum):
-    XYZ = 0
-    XZY = 1
-    YXZ = 2
-    YZX = 3
-    ZXY = 4
-    ZYX = 5
-
-
-class WeightedMode(IntEnum):
-    NONE = 0
-    IN = 1
-    OUT = 2
-    BOTH = 3
-
-
-class CurveModel(BaseModel):
-    time: float = 0
-    value: float = 0
-    inSlope: float = 0
-    outSlope: float = 0
-    weightedMode: WeightedMode = WeightedMode.NONE
-    inWeight: float = 0
-    outWeight: float = 0
-
-
-class AnimationCurveModel(BaseModel):
-    m_Curve: list[CurveModel] = []
-    m_PreInfinity: WrapMode = WrapMode.CLAMP
-    m_PostInfinity: WrapMode = WrapMode.CLAMP
-    m_RotationOrder: RotationOrder = RotationOrder.XYZ
 
 
 class NoteModel(BaseModel):
@@ -137,16 +95,12 @@ class BlockRotateEventModel(BaseModel):
     easeType: EaseType = EaseType.LINEAR
     rotation: float = 0
 
-    animationCurve: AnimationCurveModel = AnimationCurveModel()  # Unused?
-
 
 class BlockMoveEventModel(BaseModel):
     endPosition: BlockEventPosition = BlockEventPosition()
     time: float = 0
     easeTypeX: EaseType = EaseType.LINEAR
     easeTypeY: EaseType = EaseType.LINEAR
-
-    animationCurve: AnimationCurveModel = AnimationCurveModel()  # Unused?
 
 
 class BlockScaleEventModel(BaseModel):
@@ -155,8 +109,6 @@ class BlockScaleEventModel(BaseModel):
     easeTypeX: EaseType = EaseType.LINEAR
     easeTypeY: EaseType = EaseType.LINEAR
     scale: BlockEventPosition = BlockEventPosition()
-
-    animationCurve: AnimationCurveModel = AnimationCurveModel()  # Unused?
 
 
 class BlockAreaModel(BaseModel):
