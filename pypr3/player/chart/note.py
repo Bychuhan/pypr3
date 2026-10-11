@@ -55,10 +55,10 @@ class NoteRenderable(ABC):
         return (width, width / (tex.width / tex.height))
 
     @abstractmethod
-    def render(self, renderer: Renderer, screen_size: tuple[int, int]) -> None:
+    def render(self, renderer: Renderer, chart_size: tuple[float, float], screen_size: tuple[int, int]) -> None:
         pass
 
-    def _render_texture(self, renderer: Renderer, screen_size: tuple[int, int], index: int,
+    def _render_texture(self, renderer: Renderer, chart_size: tuple[float, float], screen_size: tuple[int, int], index: int,
                         x: float, y: float, w_scale: float = 1.0, h_scale: float = 1.0,
                         rotation: float = 0.0, anchor: tuple[float, float] = (0.5, 0.5),
                         color: tuple[float, float, float, float] = (1, 1, 1, 1), size_override: tuple[int, int] | None = None) -> bool:
@@ -68,7 +68,7 @@ class NoteRenderable(ABC):
 
         if size_override is None:
             tex_w, tex_h = self._texture_sizes[index]
-            w, _ = screen_size
+            w, _ = chart_size
             texture_size = (round(tex_w * w), round(tex_h * w))
         else:
             texture_size = size_override

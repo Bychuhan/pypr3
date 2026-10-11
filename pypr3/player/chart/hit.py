@@ -45,8 +45,8 @@ class HitParticle:
     def update(self, time: float):
         self.now_time = time - self.start_time
 
-    def render(self, base_x: float, base_y: float, renderer: Renderer, screen_size: tuple[int, int]):
-        w = screen_size[0]
+    def render(self, base_x: float, base_y: float, renderer: Renderer, chart_size: tuple[float, float], screen_size: tuple[int, int]):
+        w = chart_size[0]
 
         if (0 <= self.now_time < 0.5):
             progress = self.now_time / 0.5
@@ -116,8 +116,8 @@ class Hit:
 
         return False
 
-    def render(self, renderer: Renderer, screen_size: tuple[int, int]):
-        w, h = screen_size
+    def render(self, renderer: Renderer, chart_size: tuple[float, float], screen_size: tuple[int, int]):
+        w, h = chart_size
 
         x, y = rotate_translate(
             self.line_x * w, self.line_y * h, self.line_r,
@@ -125,7 +125,7 @@ class Hit:
         )
 
         for particle in self.particles:
-            particle.render(x, y, renderer, screen_size)
+            particle.render(x, y, renderer, chart_size, screen_size)
 
         if 0 <= self.frame <= HIT_FRAME_COUNT - 1:
             progress = self.now_time / HIT_DURATION

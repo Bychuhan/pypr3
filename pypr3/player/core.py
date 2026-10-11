@@ -283,7 +283,7 @@ class Player:
 
     def update(self, time: float, screen_size: tuple[int, int]):
         if self.chart:
-            self.chart.update(time, screen_size)
+            self.chart.update(time, screen_size, screen_size)
 
     def render(self, screen_size: tuple[int, int]):
         w, h = screen_size
@@ -308,4 +308,4 @@ class Player:
             )
 
         if self.chart:
-            self.chart.render(self._renderer, screen_size)
+            self.chart.render(self._renderer, screen_size, screen_size)

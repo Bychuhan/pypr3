@@ -195,24 +195,24 @@ class Line:
             if hit.update(time):
                 self.hits.remove(hit)
 
-    def render_holds(self, renderer: Renderer, screen_size: tuple[int, int]):
+    def render_holds(self, renderer: Renderer, chart_size: tuple[float, float], screen_size: tuple[int, int]):
         for note in self.holds:
             if note.base_fp > NOTE_MAX_VISIBLE_FP:
                 break
 
-            note.render(renderer, screen_size)
+            note.render(renderer, chart_size, screen_size)
 
-    def render_notes(self, renderer: Renderer, screen_size: tuple[int, int]):
+    def render_notes(self, renderer: Renderer, chart_size: tuple[float, float], screen_size: tuple[int, int]):
         for group in self.notes:
             for note in group:
                 if note.base_fp * note.base_speed > NOTE_MAX_VISIBLE_FP:
                     break
 
-                note.render(renderer, screen_size)
+                note.render(renderer, chart_size, screen_size)
 
-    def render_hits(self, renderer: Renderer, screen_size: tuple[int, int]):
+    def render_hits(self, renderer: Renderer, chart_size: tuple[float, float], screen_size: tuple[int, int]):
         for hit in self.hits.copy():
-            hit.render(renderer, screen_size)
+            hit.render(renderer, chart_size, screen_size)
 
     def get_fp(self, time: float):  # Get floor position
         first, last = 0, len(self.speed_events) - 1
@@ -241,11 +241,11 @@ class Line:
 
         self._update_hits(time)
 
-    def render(self, renderer: Renderer, screen_size: tuple[int, int]):
+    def render(self, renderer: Renderer, chart_size: tuple[float, float], screen_size: tuple[int, int]):
         if self.alpha <= 0:
             return
 
-        w, h = screen_size
+        w, h = chart_size
 
         renderer.render_rect(
             screen_size=screen_size,
@@ -364,7 +364,7 @@ class Note(NoteRenderable):
 
         return False
 
-    def render(self, renderer: Renderer, screen_size: tuple[int, int]) -> None:
+    def render(self, renderer: Renderer, chart_size: tuple[float, float], screen_size: tuple[int, int]) -> None:
         if (self.base_fp * self.base_speed < NOTE_COVER_FP and not self.is_hited):
             return
         if not self.is_visible:
@@ -375,30 +375,30 @@ class Note(NoteRenderable):
         if not self.textures:
             return
 
-        w, h = screen_size
+        w, h = chart_size
         x, y = rotate_translate(
             self.line.x * w, self.line.y * h, self.line.rotation,
             self.x_pos * w, self.current_fp * h
         )
 
         if self.type == NoteType.HOLD:
-            self._render_hold(renderer, screen_size, x, y)
+            self._render_hold(renderer, chart_size, screen_size, x, y)
         else:
-            self._render_texture(renderer, screen_size, 0,
+            self._render_texture(renderer, chart_size, screen_size, 0,
                                  x, y, rotation=self.line.rotation)
 
-    def _render_hold(self, renderer: Renderer, screen_size: tuple[int, int], x: float, y: float) -> None:
-        w, h = screen_size
+    def _render_hold(self, renderer: Renderer, chart_size: tuple[float, float], screen_size: tuple[int, int], x: float, y: float) -> None:
+        w, h = chart_size
 
         # Head
         if not self.is_hited:
-            if not self._render_texture(renderer, screen_size, 0, x, y,
+            if not self._render_texture(renderer, chart_size, screen_size, 0, x, y,
                                         h_scale=self.hold_direction, rotation=self.line.rotation, anchor=(0.5, 1)):
                 return
 
         # Body
         tex_w, _ = self._texture_sizes[1]
-        if not self._render_texture(renderer, screen_size, 1, x, y,
+        if not self._render_texture(renderer, chart_size, screen_size, 1, x, y,
                                     w_scale=1, h_scale=self.length * h, rotation=self.line.rotation,
                                     anchor=(0.5, 0), size_override=(round(tex_w * w), 1)):
             return
@@ -406,7 +406,7 @@ class Note(NoteRenderable):
         # Tail
         end_x, end_y = rotate_translate(
             x, y, self.line.rotation, 0, self.length * h)
-        self._render_texture(renderer, screen_size, 2, end_x, end_y,
+        self._render_texture(renderer, chart_size, screen_size, 2, end_x, end_y,
                              h_scale=self.hold_direction, rotation=self.line.rotation, anchor=(0.5, 0))
 
 
@@ -434,29 +434,29 @@ class PhiChart(Chart):
 
                 note.init_textures()
 
-    def update(self, time: float, screen_size: tuple[int, int]):
+    def update(self, time: float, chart_size: tuple[float, float], screen_size: tuple[int, int]):
         chart_time = time - self.offset
 
         for line in self.lines:
             line.update(chart_time)
 
-    def render(self, renderer: Renderer, screen_size: tuple[int, int]):
-        w = screen_size[0]
+    def render(self, renderer: Renderer, chart_size: tuple[float, float], screen_size: tuple[int, int]):
+        w = chart_size[0]
 
         for line in self.lines:
-            line.render(renderer, screen_size)
+            line.render(renderer, chart_size, screen_size)
 
         for line in self.lines:
-            line.render_holds(renderer, screen_size)
+            line.render_holds(renderer, chart_size, screen_size)
 
         for line in self.lines:
-            line.render_notes(renderer, screen_size)
+            line.render_notes(renderer, chart_size, screen_size)
 
         hit_renderer = renderer.hit_renderer
         hit_renderer.clear()
 
         for line in self.lines:
-            line.render_hits(renderer, screen_size)
+            line.render_hits(renderer, chart_size, screen_size)
 
         hit_renderer.render_particles(
             screen_size=screen_size
