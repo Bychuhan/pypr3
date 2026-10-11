@@ -116,7 +116,7 @@ class Hit:
 
         return False
 
-    def render(self,  renderer: Renderer, screen_size: tuple[int, int]):
+    def render(self, renderer: Renderer, screen_size: tuple[int, int]):
         w, h = screen_size
 
         x, y = rotate_translate(
