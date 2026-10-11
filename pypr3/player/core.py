@@ -19,6 +19,7 @@ from pypr3.renderer import Renderer, TextureConverter, TextureRegistry
 
 BG_DIM_COLOR = (0, 0, 0, 0.55)
 FONT_SIZE = 75
+MAX_ASPECT_RATIO = 16 / 9
 
 
 class Player:
@@ -281,9 +282,26 @@ class Player:
     def play_music(self):
         self.music.play()
 
+    def _get_chart_size(self, screen_size: tuple[int, int]) -> tuple[tuple[float, float], tuple[int, int, int, int] | None]:
+        result = screen_size
+        aspect_ratio = result[0] / result[1]
+
+        scissor = None
+
+        if aspect_ratio > MAX_ASPECT_RATIO:
+            chart_width = result[1] * MAX_ASPECT_RATIO
+            result = (chart_width, result[1])
+
+            scissor_left = (screen_size[0] - chart_width) / 2
+            scissor = (round(scissor_left), 0, round(chart_width), result[1])
+
+        return result, scissor
+
     def update(self, time: float, screen_size: tuple[int, int]):
         if self.chart:
-            self.chart.update(time, screen_size, screen_size)
+            chart_size, _ = self._get_chart_size(screen_size)
+
+            self.chart.update(time, chart_size, screen_size)
 
     def render(self, screen_size: tuple[int, int]):
         w, h = screen_size
@@ -308,4 +326,8 @@ class Player:
             )
 
         if self.chart:
-            self.chart.render(self._renderer, screen_size, screen_size)
+            chart_size, scissor = self._get_chart_size(screen_size)
+
+            self._renderer.ctx.scissor = scissor
+            self.chart.render(self._renderer, chart_size, screen_size)
+            self._renderer.ctx.scissor = None
