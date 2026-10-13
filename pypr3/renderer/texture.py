@@ -3,7 +3,7 @@ from io import BytesIO
 
 
 import moderngl as mgl
-from PIL import Image
+lazy from PIL import Image
 
 
 class TextureConverter:

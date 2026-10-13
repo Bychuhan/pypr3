@@ -2,11 +2,11 @@ import json
 from pathlib import Path
 from io import TextIOWrapper
 from typing import IO, Callable
-from zipfile import ZipFile
+lazy from zipfile import ZipFile
 
 
 import moderngl as mgl
-from PIL import Image, ImageFilter
+lazy from PIL import Image, ImageFilter
 from loguru import logger
 
 
