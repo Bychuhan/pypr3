@@ -17,7 +17,9 @@ from pypr3.audio import DirectSound, MusicCls, SoundRegistry
 from pypr3.renderer import Renderer, TextureConverter, TextureRegistry
 
 
-BG_DIM_COLOR = (0, 0, 0, 0.55)
+BG_DIM_COLOR = (0, 0, 0, 0.5)
+CHART_DIM_COLOR = (0, 0, 0, 0.1)
+SIDE_DIM_COLOR = (0.1, 0.1, 0.1, 0.7)
 FONT_SIZE = 75
 MAX_ASPECT_RATIO = 16 / 9
 
@@ -306,6 +308,8 @@ class Player:
     def render(self, screen_size: tuple[int, int]):
         w, h = screen_size
 
+        chart_size, scissor = self._get_chart_size(screen_size)
+
         if self.illustration:
             scale = max(w / self.illustration.width,
                         h / self.illustration.height)
@@ -325,9 +329,30 @@ class Player:
                 color=BG_DIM_COLOR
             )
 
-        if self.chart:
-            chart_size, scissor = self._get_chart_size(screen_size)
+            self._renderer.render_rect(
+                screen_size,
+                x=0, y=0,
+                width=chart_size[0], height=chart_size[1],
+                rotation=0,
+                color=CHART_DIM_COLOR
+            )
 
+            if scissor:
+                side_width = scissor[0]
+
+                self._renderer.render_rect(
+                    screen_size,
+                    x=-w / 2, y=0, width=side_width, height=h,
+                    rotation=0, anchor=(0, 0.5), color=SIDE_DIM_COLOR
+                )
+
+                self._renderer.render_rect(
+                    screen_size,
+                    x=w / 2, y=0, width=side_width, height=h,
+                    rotation=0, anchor=(1, 0.5), color=SIDE_DIM_COLOR
+                )
+
+        if self.chart:
             self._renderer.ctx.scissor = scissor
             self.chart.render(self._renderer, chart_size, screen_size)
             self._renderer.ctx.scissor = None
