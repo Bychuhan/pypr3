@@ -711,7 +711,7 @@ class Line:
 
             if self.text_texture and self.text:
                 text_scale = (
-                    (RPE_FONT_SIZE / self.text_texture.font_size) * h / RPE_SCREEN_HEIGHT)
+                    (RPE_FONT_SIZE / self.text_texture.font_height) * h / RPE_SCREEN_HEIGHT)
 
                 renderer.render_texture(
                     screen_size=screen_size,

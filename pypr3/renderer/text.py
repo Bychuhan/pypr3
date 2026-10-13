@@ -14,12 +14,12 @@ from pypr3.renderer.texture import TextureConverter
 @dataclass
 class TextTexture:
     texture: mgl.Texture
-    font_size: int
+    font_height: int
     text: str
     y_offset: int = field(init=False)
 
     def __post_init__(self) -> None:
-        self.y_offset = self.texture.height - self.font_size
+        self.y_offset = self.texture.height - self.font_height
 
     def __getattr__(self, name: str) -> Any:
         if name.startswith("__") and name.endswith("__"):
@@ -45,6 +45,7 @@ class TextRenderer:
 
         with warnings.catch_warnings():
             warnings.filterwarnings("error", category=UserWarning)
+
             self._fonts[name] = pygame.font.SysFont(path, size)
 
     def render_text(
@@ -64,7 +65,7 @@ class TextRenderer:
             return TextTexture(
                 texture=TextureConverter.from_bytes_with_wh(
                     self._ctx, "RGBA", (1, 1), data),
-                font_size=font.get_height(),
+                font_height=font.get_height(),
                 text=text,
             )
 
@@ -95,7 +96,7 @@ class TextRenderer:
         return TextTexture(
             texture=TextureConverter.from_bytes_with_wh(
                 self._ctx, "RGBA", result.get_size(), data),
-            font_size=font.get_height(),
+            font_height=font.get_height(),
             text=text,
         )
 
