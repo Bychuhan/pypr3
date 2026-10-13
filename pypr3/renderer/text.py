@@ -32,7 +32,7 @@ class TextTexture:
 class TextRenderer:
     def __init__(self, ctx: mgl.Context) -> None:
         self._fonts: dict[str, pygame.font.Font] = {}
-        self._font_size: dict[str, int] = {}
+        self._font_sizes: dict[str, int] = {}
         self._ctx = ctx
 
     def load_font(self, name: str, path: str | IO[bytes], size: int) -> None:
@@ -40,7 +40,7 @@ class TextRenderer:
             logger.warning(f"Font '{name}' already registered, overwriting")
 
         self._fonts[name] = pygame.font.Font(path, size)
-        self._font_size[name] = size
+        self._font_sizes[name] = size
 
     def load_system_font(self, name: str, path: str, size: int) -> None:
         if name in self._fonts:
@@ -50,7 +50,7 @@ class TextRenderer:
             warnings.filterwarnings("error", category=UserWarning)
 
             self._fonts[name] = pygame.font.SysFont(path, size)
-            self._font_size[name] = size
+            self._font_sizes[name] = size
 
     def render_text(
         self,
@@ -69,7 +69,7 @@ class TextRenderer:
             return TextTexture(
                 texture=TextureConverter.from_bytes_with_wh(
                     self._ctx, "RGBA", (1, 1), data),
-                font_size=self._font_size[font_name],
+                font_size=self._font_sizes[font_name],
                 font_height=font.get_height(),
                 text=text,
             )
@@ -101,7 +101,7 @@ class TextRenderer:
         return TextTexture(
             texture=TextureConverter.from_bytes_with_wh(
                 self._ctx, "RGBA", result.get_size(), data),
-            font_size=self._font_size[font_name],
+            font_size=self._font_sizes[font_name],
             font_height=font.get_height(),
             text=text,
         )
