@@ -93,8 +93,9 @@ def main() -> None:
         pygame.display.flip()
 
         frame_count += 1
-        if time.time() - fps_timer >= 1.0:
-            logger.debug(f"FPS: {frame_count}")
+        fps_elapsed = time.time() - fps_timer
+        if fps_elapsed >= 1.0:
+            logger.debug(f"FPS: {(frame_count / fps_elapsed):.2f}")
             frame_count = 0
             fps_timer = time.time()
 
