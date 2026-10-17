@@ -10,7 +10,7 @@ lazy from PIL import Image, ImageFilter
 from loguru import logger
 
 
-from pypr3.core import ResourceManager
+from pypr3.core import ResourceManager, AssetCategory
 from pypr3.player.info import ChartInfo
 from pypr3.player.chart import Chart, ChartParser
 from pypr3.audio import DirectSound, MusicCls, SoundRegistry
@@ -118,7 +118,7 @@ class Player:
     def init_assets(self):
         logger.info("Initializing player assets")
 
-        self._load_textures(lambda file: self._resource_manager.open(self._resource_manager.get_texture_path(file)), [
+        self._load_textures(lambda file: self._resource_manager.open(self._resource_manager.get_path(AssetCategory.TEXTURE, file)), [
             ("note.tap", "tap.png"),
             ("note.tap.hl", "tap_hl.png"),
             ("note.drag", "drag.png"),
@@ -134,14 +134,14 @@ class Player:
             ("hit_fx", "hit_fx.png"),
         ])
 
-        self._load_sounds(lambda file: self._resource_manager.open(self._resource_manager.get_sound_path(file)), [
+        self._load_sounds(lambda file: self._resource_manager.open(self._resource_manager.get_path(AssetCategory.SOUND, file)), [
             ("hitsound.tap", "tap.ogg"),
             ("hitsound.drag", "drag.ogg"),
             ("hitsound.hold", "hold.ogg"),
             ("hitsound.flick", "flick.ogg"),
         ])
 
-        self._load_fonts(lambda file: self._resource_manager.open(self._resource_manager.get_font_path(file)), [
+        self._load_fonts(lambda file: self._resource_manager.open(self._resource_manager.get_path(AssetCategory.FONT, file)), [
             ("default", "font.ttf"),
         ])
 

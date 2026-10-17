@@ -1,5 +1,13 @@
 from typing import IO, Literal, overload, cast
+from enum import StrEnum
 from pathlib import Path
+
+
+class AssetCategory(StrEnum):
+    TEXTURE = "textures"
+    SOUND = "sounds"
+    FONT = "fonts"
+    SHADER = "shaders"
 
 
 class ResourceManager:
@@ -30,23 +38,14 @@ class ResourceManager:
         except FileNotFoundError:
             return None
 
+    def get_path(self, category: AssetCategory, file: str | Path) -> Path:
+        return self.root / category.value / file
+
     def get_file_path(self, file: str) -> Path:
         return self.root / file
 
-    def get_texture_path(self, file: str) -> Path:
-        return self.root / "textures" / file
-
-    def get_sound_path(self, file: str) -> Path:
-        return self.root / "sounds" / file
-
-    def get_shader_path(self, name: str, stage: str) -> Path:
-        return self.root / "shaders" / name / f"{stage}.glsl"
-
-    def get_font_path(self, file: str) -> Path:
-        return self.root / "fonts" / file
-
     def get_texture(self, file: str) -> bytes | None:
-        path = self.get_texture_path(file)
+        path = self.get_path(AssetCategory.TEXTURE, file)
 
         try:
             with open(path, "rb") as f:
@@ -55,7 +54,7 @@ class ResourceManager:
             return None
 
     def get_sound(self, file: str) -> bytes | None:
-        path = self.get_sound_path(file)
+        path = self.get_path(AssetCategory.SOUND, file)
 
         try:
             with open(path, "rb") as f:
@@ -64,7 +63,7 @@ class ResourceManager:
             return None
 
     def get_shader(self, name: str, stage: str) -> str | None:
-        path = self.get_shader_path(name, stage)
+        path = self.get_path(AssetCategory.SHADER, f"{name}/{stage}.glsl")
 
         try:
             with open(path, "r", encoding="utf-8") as f:
@@ -73,7 +72,7 @@ class ResourceManager:
             return None
 
     def get_font(self, file: str) -> bytes | None:
-        path = self.get_font_path(file)
+        path = self.get_path(AssetCategory.FONT, file)
 
         try:
             with open(path, "rb") as f:
