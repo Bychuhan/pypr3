@@ -3,6 +3,9 @@ from enum import StrEnum
 from pathlib import Path
 
 
+from loguru import logger
+
+
 class AssetCategory(StrEnum):
     TEXTURE = "textures"
     SOUND = "sounds"
@@ -48,6 +51,10 @@ class ResourceManager:
             with open(path, "rb") as f:
                 return f.read()
         except FileNotFoundError:
+            logger.opt(colors=True).warning(
+                "Texture not found: <yellow>{}</yellow>", path
+            )
+
             return None
 
     def get_sound(self, file: str) -> bytes | None:
@@ -57,6 +64,10 @@ class ResourceManager:
             with open(path, "rb") as f:
                 return f.read()
         except FileNotFoundError:
+            logger.opt(colors=True).warning(
+                "Sound not found: <yellow>{}</yellow>", path
+            )
+
             return None
 
     def get_shader(self, name: str, stage: str) -> str | None:
@@ -66,6 +77,11 @@ class ResourceManager:
             with open(path, "r", encoding="utf-8") as f:
                 return f.read()
         except FileNotFoundError:
+            logger.opt(colors=True).warning(
+                "Shader not found: <yellow>{}</yellow> (name='{}', stage='{}')",
+                path, name, stage
+            )
+
             return None
 
     def get_font(self, file: str) -> bytes | None:
@@ -75,4 +91,8 @@ class ResourceManager:
             with open(path, "rb") as f:
                 return f.read()
         except FileNotFoundError:
+            logger.opt(colors=True).warning(
+                "Font not found: <yellow>{}</yellow>", path
+            )
+
             return None
