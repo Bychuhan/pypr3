@@ -1,4 +1,4 @@
-from typing import IO, Literal, overload
+from typing import IO, Literal, overload, cast
 from pathlib import Path
 
 
@@ -19,7 +19,7 @@ class ResourceManager:
         pass
 
     def open(self, file: str | Path, mode: str = "rb") -> IO[bytes] | IO[str]:
-        return open(self.root / file, mode)
+        return cast(IO[bytes] | IO[str], open(self.root / file, mode))
 
     def get_file(self, file: str) -> bytes | None:
         path = self.root / file
