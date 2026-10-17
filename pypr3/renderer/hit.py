@@ -30,7 +30,7 @@ class HitRenderer:
                 vertices=None,
                 vertex_format="2f 2f 2f 4f 1f",
                 attributes=["in_pos", "in_texCoord",
-                            "position", "in_color", "in_frame"],
+                            "in_center", "in_color", "in_frameIndex"],
                 indices=None,
                 vbo_reserve=4096 * (2 + 2 + 2 + 4 + 1) * 4,
                 vbo_dynamic=True,
@@ -49,7 +49,7 @@ class HitRenderer:
                 fragment_shader=fs,
                 vertices=None,
                 vertex_format="2f 2f 1f 4f",
-                attributes=["in_pos", "position", "size", "in_color"],
+                attributes=["in_pos", "in_center", "in_size", "in_color"],
                 indices=None,
                 vbo_reserve=4096 * (2 + 2 + 1 + 4) * 4,
                 vbo_dynamic=True,
@@ -102,12 +102,12 @@ class HitRenderer:
         self._hit_shader.write_vbo(self._hit_verticles)
         self._hit_shader.write_ibo(self._hit_indices)
 
-        self._hit_shader.set_uniform("screenSize", screen_size)
+        self._hit_shader.set_uniform("u_screenSize", screen_size)
         self._hit_shader.set_uniform(
-            "textureSize", texture_size or (texture.width, texture.height))
-        self._hit_shader.set_uniform("gridSize", grid_size)
+            "u_hitTextureSize", texture_size or (texture.width, texture.height))
+        self._hit_shader.set_uniform("u_gridSize", grid_size)
 
-        self._hit_shader.set_uniform("texture", 0)
+        self._hit_shader.set_uniform("u_hitTexture", 0)
         texture.use(0)
 
         self._hit_shader.render(mgl.TRIANGLES)
@@ -122,6 +122,6 @@ class HitRenderer:
         self._particle_shader.write_vbo(self._particle_verticles)
         self._particle_shader.write_ibo(self._particle_indices)
 
-        self._particle_shader.set_uniform("screenSize", screen_size)
+        self._particle_shader.set_uniform("u_screenSize", screen_size)
 
         self._particle_shader.render(mgl.TRIANGLES)

@@ -2,21 +2,21 @@
 
 in vec2 in_pos;
 
-uniform vec2 position;
-uniform vec2 size;
-uniform vec2 anchor;
-uniform float rotation;
+uniform vec2 u_position;
+uniform vec2 u_size;
+uniform vec2 u_anchor;
+uniform float u_rotation;
 
-uniform vec2 screenSize;
+uniform vec2 u_screenSize;
 
 void main() {
-    vec2 anchorOffset = (-(anchor - 0.5)) * size * 2;
+    vec2 anchorOffset = (-(u_anchor - 0.5)) * u_size * 2.;
 
-    float c = cos(radians(rotation));
-    float s = sin(radians(rotation));
+    float c = cos(radians(u_rotation));
+    float s = sin(radians(u_rotation));
     mat2 rotMat = mat2(c, -s, s, c);
 
-    vec2 realPos = ((size * in_pos + anchorOffset) * rotMat + position * 2) / screenSize;
+    vec2 ndcPos = ((u_size * in_pos + anchorOffset) * rotMat + u_position * 2.) / u_screenSize;
 
-    gl_Position = vec4(realPos, 0., 1.);
+    gl_Position = vec4(ndcPos, 0., 1.);
 }

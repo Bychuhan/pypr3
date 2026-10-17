@@ -87,12 +87,12 @@ class Renderer:
         if not self._rect_shader:
             return
 
-        self._rect_shader.set_uniform("screenSize", screen_size)
-        self._rect_shader.set_uniform("position", (x, y))
-        self._rect_shader.set_uniform("size", (width, height))
-        self._rect_shader.set_uniform("rotation", rotation)
-        self._rect_shader.set_uniform("anchor", anchor)
-        self._rect_shader.set_uniform("color", color)
+        self._rect_shader.set_uniform("u_screenSize", screen_size)
+        self._rect_shader.set_uniform("u_position", (x, y))
+        self._rect_shader.set_uniform("u_size", (width, height))
+        self._rect_shader.set_uniform("u_rotation", rotation)
+        self._rect_shader.set_uniform("u_anchor", anchor)
+        self._rect_shader.set_uniform("u_color", color)
 
         self._rect_shader.render(mgl.TRIANGLES)
 
@@ -108,16 +108,16 @@ class Renderer:
 
             x_pos, y_pos = rotate_translate(x_pos, y_pos, rotation, 0, y_offset)
 
-        self._texture_shader.set_uniform("screenSize", screen_size)
+        self._texture_shader.set_uniform("u_screenSize", screen_size)
         self._texture_shader.set_uniform(
-            "textureSize", texture_size or (texture.width, texture.height))
-        self._texture_shader.set_uniform("position", (x_pos, y_pos))
-        self._texture_shader.set_uniform("scale", (w_scale, h_scale))
-        self._texture_shader.set_uniform("rotation", rotation)
-        self._texture_shader.set_uniform("anchor", anchor)
-        self._texture_shader.set_uniform("color", color)
+            "u_textureSize", texture_size or (texture.width, texture.height))
+        self._texture_shader.set_uniform("u_position", (x_pos, y_pos))
+        self._texture_shader.set_uniform("u_scale", (w_scale, h_scale))
+        self._texture_shader.set_uniform("u_rotation", rotation)
+        self._texture_shader.set_uniform("u_anchor", anchor)
+        self._texture_shader.set_uniform("u_color", color)
 
-        self._texture_shader.set_uniform("texture", 0)
+        self._texture_shader.set_uniform("u_texture", 0)
         texture.use(0)
 
         self._texture_shader.render(mgl.TRIANGLES)
