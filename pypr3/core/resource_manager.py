@@ -14,6 +14,10 @@ class ResourceManager:
     def open(self, file: str | Path, mode: Literal["r"]) -> IO[str]:
         pass
 
+    @overload
+    def open(self, file: str | Path) -> IO[bytes]:
+        pass
+
     def open(self, file: str | Path, mode: str = "rb") -> IO[bytes] | IO[str]:
         return open(self.root / file, mode)
 
