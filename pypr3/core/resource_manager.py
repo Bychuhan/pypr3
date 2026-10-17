@@ -1,4 +1,4 @@
-from typing import IO
+from typing import IO, Literal, overload
 from pathlib import Path
 
 
@@ -6,10 +6,16 @@ class ResourceManager:
     def __init__(self, root: str | Path) -> None:
         self.root = Path(root)
 
-    def open(self, file: str | Path, mode: str = "rb") -> IO[bytes]:
-        path = self.root / file
+    @overload
+    def open(self, file: str | Path, mode: Literal["rb"]) -> IO[bytes]:
+        pass
 
-        return open(path, mode)
+    @overload
+    def open(self, file: str | Path, mode: Literal["r"]) -> IO[str]:
+        pass
+
+    def open(self, file: str | Path, mode: str = "rb") -> IO[bytes] | IO[str]:
+        return open(self.root / file, mode)
 
     def get_file(self, file: str) -> bytes | None:
         path = self.root / file
