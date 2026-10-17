@@ -41,9 +41,6 @@ class ResourceManager:
     def get_path(self, category: AssetCategory, file: str | Path) -> Path:
         return self.root / category.value / file
 
-    def get_file_path(self, file: str) -> Path:
-        return self.root / file
-
     def get_texture(self, file: str) -> bytes | None:
         path = self.get_path(AssetCategory.TEXTURE, file)
 
