@@ -107,5 +107,6 @@ def main() -> None:
 if __name__ == "__main__":
     main()
 
+    pygame.quit()
     print()
     input("Press Enter to exit...")
