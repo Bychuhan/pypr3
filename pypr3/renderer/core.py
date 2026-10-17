@@ -26,7 +26,8 @@ class Renderer:
         self.text_renderer = TextRenderer(self.ctx)
 
     def _init_shaders(self):
-        vs, fs, _ = self._resource_manager.get_shader("rect")
+        vs = self._resource_manager.get_shader("rect", "vert")
+        fs = self._resource_manager.get_shader("rect", "frag")
 
         self._rect_shader: None | Shader = None
 
@@ -49,7 +50,8 @@ class Renderer:
                 ]
             )
 
-        vs, fs, _ = self._resource_manager.get_shader("texture")
+        vs = self._resource_manager.get_shader("texture", "vert")
+        fs = self._resource_manager.get_shader("texture", "frag")
 
         self._texture_shader: None | Shader = None
 

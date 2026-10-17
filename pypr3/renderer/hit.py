@@ -18,7 +18,8 @@ class HitRenderer:
         self._init_shaders()
 
     def _init_shaders(self):
-        vs, fs, _ = self._resource_manager.get_shader("hit")
+        vs = self._resource_manager.get_shader("hit", "vert")
+        fs = self._resource_manager.get_shader("hit", "frag")
 
         self._hit_shader: None | Shader = None
 
@@ -38,7 +39,8 @@ class HitRenderer:
                 ibo_dynamic=True
             )
 
-        vs, fs, _ = self._resource_manager.get_shader("particle")
+        vs = self._resource_manager.get_shader("particle", "vert")
+        fs = self._resource_manager.get_shader("particle", "frag")
 
         self._particle_shader: None | Shader = None
 
